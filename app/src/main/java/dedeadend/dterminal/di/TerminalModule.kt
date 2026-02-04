@@ -4,13 +4,17 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dedeadend.dterminal.data.CommandExecutor
 import dedeadend.dterminal.data.ShellCommandExecutor
+import dedeadend.dterminal.domin.CommandExecutor
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object TerminalModule {
+
+    @Provides
+    fun provideIoDispatcher() = Dispatchers.IO
 
     @Provides
     @Singleton
