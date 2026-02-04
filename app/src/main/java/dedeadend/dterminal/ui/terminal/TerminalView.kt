@@ -35,6 +35,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,10 +60,12 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), mainVM: MainViewMod
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
     val scrollState = rememberLazyListState()
-    LaunchedEffect(viewModel.output.size) {
-        if (!viewModel.output.isEmpty()) {
+    val output by viewModel.output.collectAsState()
+
+    LaunchedEffect(output) {
+        if (!output.isEmpty()) {
             yield()
-            scrollState.animateScrollToItem(viewModel.output.size - 1)
+            scrollState.animateScrollToItem(output.size - 1)
         }
     }
 
@@ -91,7 +95,7 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), mainVM: MainViewMod
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(viewModel.output) {
+                items(output) {
                     OutputItem(it)
                 }
             }

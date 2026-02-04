@@ -1,7 +1,6 @@
 package dedeadend.dterminal.ui.terminal
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -11,7 +10,10 @@ import dedeadend.dterminal.domin.CommandExecutor
 import dedeadend.dterminal.domin.TerminalMessage
 import dedeadend.dterminal.domin.TerminalState
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,8 +35,8 @@ class TerminalViewModel @Inject constructor(
     var command by mutableStateOf("")
         private set
 
-    private val _output = mutableStateListOf<TerminalMessage>()
-    val output: List<TerminalMessage> = _output
+    private val _output = MutableStateFlow<List<TerminalMessage>>(emptyList())
+    val output = _output.asStateFlow()
 
 
     fun toggleToolsMenu(show: Boolean) {
@@ -51,7 +53,7 @@ class TerminalViewModel @Inject constructor(
     }
 
     fun clearOutput() {
-        _output.clear()
+        _output.update { emptyList() }
     }
 
     fun execute() {
@@ -61,20 +63,20 @@ class TerminalViewModel @Inject constructor(
             command = ""
             try {
                 commandExecutor.execute(cmd, isRoot).flowOn(ioDispatcher).collect { message ->
-                    _output.add(message)
+                    _output.update { it + message }
                 }
             } catch (e: Exception) {
-                _output.add(
-                    TerminalMessage(
+                _output.update {
+                    it + TerminalMessage(
                         TerminalState.Error,
-                        e.message ?: "[An error occurred]"
+                        e.message ?: "Unknown Error"
                     )
-                )
+                }
             } finally {
                 state = TerminalState.Idle
             }
         }
     }
 
-    fun terminate() = _output.add(commandExecutor.cancel())
+    fun terminate() = _output.update { it + commandExecutor.cancel() }
 }
