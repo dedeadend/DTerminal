@@ -34,9 +34,14 @@ val Typography = Typography(
     )
     */
 )
-val terminalTextStyle = TextStyle(
+val terminalSuccessTextStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
-    fontSize = 15.sp,
-    //color = Color.Green,
+    fontSize = 14.sp,
+    lineHeight = 20.sp
+)
+val terminalErrorTextStyle = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontSize = 14.sp,
+    color = Color.Red,
     lineHeight = 20.sp
 )

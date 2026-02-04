@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dedeadend.dterminal.domin.TerminalMessage
 import dedeadend.dterminal.domin.TerminalState
+import dedeadend.dterminal.ui.main.MainViewModel
 import dedeadend.dterminal.ui.theme.DTerminalTheme
 import dedeadend.dterminal.ui.theme.terminalErrorTextStyle
 import dedeadend.dterminal.ui.theme.terminalSuccessTextStyle
@@ -54,11 +55,10 @@ import kotlinx.coroutines.yield
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-fun Terminal() {
+fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), mainVM: MainViewModel) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
-    val viewModel: TerminalViewModel = hiltViewModel()
     val scrollState = rememberLazyListState()
     LaunchedEffect(viewModel.output.size) {
         if (!viewModel.output.isEmpty()) {
@@ -230,6 +230,7 @@ fun CustomTerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit) 
     }
 }
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun TerminalPreview() {
@@ -237,3 +238,4 @@ fun TerminalPreview() {
         Terminal()
     }
 }
+*/

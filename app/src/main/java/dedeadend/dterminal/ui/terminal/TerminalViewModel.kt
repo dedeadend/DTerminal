@@ -55,7 +55,7 @@ class TerminalViewModel @Inject constructor(
     }
 
     fun execute() {
-        viewModelScope.launch() {
+        viewModelScope.launch {
             state = TerminalState.Running
             val cmd = command
             command = ""
