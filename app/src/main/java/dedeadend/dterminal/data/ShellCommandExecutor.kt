@@ -11,33 +11,34 @@ class ShellCommandExecutor : CommandExecutor {
     private var process: Process? = null
     private var reader: BufferedReader? = null
 
-    override fun execute(command: String, isroot: Boolean): Flow<TerminalMessage> = callbackFlow {
-        val commands = command.lines()
-        for (cmd in commands) {
-            if (cmd.isEmpty()) continue
-            if (isroot)
-                process = ProcessBuilder("su", "-c", cmd)
-                    .redirectErrorStream(true)
-                    .start()
-            else
-                process = ProcessBuilder("/system/bin/sh", "-c", cmd)
-                    .redirectErrorStream(true)
-                    .start()
-            reader = process?.inputStream?.bufferedReader()
-            var line: String?
-            while (reader?.readLine().also { line = it } != null) {
-                trySend(TerminalMessage(TerminalState.Success, line!!))
+    override suspend fun execute(command: String, isroot: Boolean): Flow<TerminalMessage> =
+        callbackFlow {
+            val commands = command.lines()
+            for (cmd in commands) {
+                if (cmd.isEmpty()) continue
+                if (isroot)
+                    process = ProcessBuilder("su", "-c", cmd)
+                        .redirectErrorStream(true)
+                        .start()
+                else
+                    process = ProcessBuilder("/system/bin/sh", "-c", cmd)
+                        .redirectErrorStream(true)
+                        .start()
+                reader = process?.inputStream?.bufferedReader()
+                var line: String?
+                while (reader?.readLine().also { line = it } != null) {
+                    trySend(TerminalMessage(TerminalState.Success, line!!))
+                }
+                process?.waitFor()
+                reader?.close()
+                process?.destroy()
+                reader = null
+                process = null
             }
-            process?.waitFor()
-            reader?.close()
-            process?.destroy()
-            reader = null
-            process = null
+            close()
         }
-        close()
-    }
 
-    override fun cancel(): TerminalMessage {
+    override suspend fun cancel(): TerminalMessage {
         process?.let {
             reader?.close()
             it.destroy()

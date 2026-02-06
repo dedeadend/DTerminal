@@ -35,7 +35,7 @@ class TerminalViewModel @Inject constructor(
     var command by mutableStateOf("")
         private set
 
-    private val _output = MutableStateFlow<List<TerminalMessage>>(emptyList())
+    private val _output = MutableStateFlow(emptyList<TerminalMessage>())
     val output = _output.asStateFlow()
 
 
@@ -78,5 +78,5 @@ class TerminalViewModel @Inject constructor(
         }
     }
 
-    fun terminate() = _output.update { it + commandExecutor.cancel() }
+    fun terminate() = viewModelScope.launch { _output.update { it + commandExecutor.cancel() } }
 }

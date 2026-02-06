@@ -2,36 +2,45 @@ package dedeadend.dterminal.domin
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CommandDao {
-    @Query("SELECT * FROM history_command")
-    fun getAllHistoryCommands(): Flow<List<HistoryCommand>>
+    @Query("SELECT * FROM history")
+    fun getAllHistory(): Flow<List<History>>
 
-    @Query("SELECT * FROM saved_command")
-    fun getAllSavedCommands(): Flow<List<SavedCommand>>
-
-
-    @Insert
-    suspend fun insertHistoryCommand(command: HistoryCommand)
-
-    @Insert
-    suspend fun insertSavedCommand(command: SavedCommand)
+    @Query("SELECT * FROM script")
+    fun getAllScripts(): Flow<List<Script>>
 
 
-    @Query("DELETE FROM history_command")
-    suspend fun deleteAllHistoryCommands()
+    @Insert(onConflict = REPLACE)
+    suspend fun insertHistory(command: History)
 
-    @Query("DELETE FROM saved_command")
-    suspend fun deleteAllSavedCommands()
+    @Insert(onConflict = REPLACE)
+    suspend fun insertScript(command: Script)
 
 
-    @Query("DELETE FROM history_command WHERE id = :id")
-    suspend fun deleteHistoryCommandById(id: Int)
+    @Insert(onConflict = REPLACE)
+    suspend fun insertHistory(commands: List<History>)
 
-    @Query("DELETE FROM saved_command WHERE id = :id")
-    suspend fun deleteSavedCommandById(id: Int)
+    @Insert(onConflict = REPLACE)
+    suspend fun insertScript(commands: List<Script>)
+
+
+    @Query("DELETE FROM history")
+    suspend fun deleteAllHistory()
+
+    @Query("DELETE FROM script")
+    suspend fun deleteAllScripts()
+
+
+    @Query("DELETE FROM history WHERE id = :id")
+    suspend fun deleteHistoryById(id: Int)
+
+    @Query("DELETE FROM script WHERE id = :id")
+    suspend fun deleteScriptById(id: Int)
+
 }
 

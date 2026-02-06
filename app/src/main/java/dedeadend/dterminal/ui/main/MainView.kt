@@ -4,13 +4,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import dedeadend.dterminal.navigation.AppDestinations
+import dedeadend.dterminal.domin.AppDestinations
 import dedeadend.dterminal.navigation.AppNavigation
 
 @Composable
@@ -18,8 +16,8 @@ fun Main(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
-
-    HandleNavigationState(navController, viewModel)
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    //HandleNavigationState(navController, viewModel)
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -32,8 +30,14 @@ fun Main(
                         )
                     },
                     label = { Text(it.name) },
-                    selected = it == viewModel.currentScreen,
-                    onClick = { viewModel.navigateTO(it) }
+                    selected = navBackStackEntry?.destination?.route == it.name,
+                    onClick = {
+                        navController.navigate(it.name) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }
@@ -41,7 +45,7 @@ fun Main(
         AppNavigation(navController, viewModel)
     }
 }
-
+/*
 @Composable
 fun HandleNavigationState(
     navController: NavHostController,
@@ -67,4 +71,4 @@ fun HandleNavigationState(
                 viewModel.navigateTO(screen)
         }
     }
-}
+}*/

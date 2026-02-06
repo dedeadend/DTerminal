@@ -47,20 +47,26 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dedeadend.dterminal.domin.TerminalMessage
 import dedeadend.dterminal.domin.TerminalState
-import dedeadend.dterminal.ui.main.MainViewModel
 import dedeadend.dterminal.ui.theme.terminalErrorTextStyle
 import dedeadend.dterminal.ui.theme.terminalSuccessTextStyle
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.yield
 
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), mainVM: MainViewModel) {
+fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Flow<String>) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
     val scrollState = rememberLazyListState()
     val output by viewModel.output.collectAsState()
+
+    LaunchedEffect(Unit) {
+        terminalCommand.collect { command ->
+            viewModel.onCommandChange(command)
+        }
+    }
 
     LaunchedEffect(output) {
         if (!output.isEmpty()) {

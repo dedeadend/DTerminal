@@ -1,19 +1,27 @@
 package dedeadend.dterminal.ui.main
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dedeadend.dterminal.navigation.AppDestinations
+import dedeadend.dterminal.domin.AppDestinations
+import dedeadend.dterminal.domin.UiEvent
 import jakarta.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MainViewModel @Inject constructor() : ViewModel() {
-    var currentScreen by mutableStateOf(AppDestinations.TERMINAL)
-        private set
+    private var _navigationEvent = Channel<UiEvent>(Channel.CONFLATED)
+    val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    fun navigateTO(screen: AppDestinations) {
-        currentScreen = screen
+    private var _terminalCommand = Channel<String>(Channel.CONFLATED)
+    val terminalCommand = _terminalCommand.receiveAsFlow()
+
+    fun onHistoryItemClicked(command: String) {
+        viewModelScope.launch {
+            _terminalCommand.send(command)
+            _navigationEvent.send(UiEvent.Navigate(AppDestinations.TERMINAL.name))
+        }
     }
 }

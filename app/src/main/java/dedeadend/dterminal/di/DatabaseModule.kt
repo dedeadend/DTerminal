@@ -19,7 +19,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context : Context) : AppDatabase {
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
@@ -33,7 +33,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun ProvideRepository(commandDao: CommandDao, ioDispatcher: CoroutineDispatcher) =
+    fun provideRepository(commandDao: CommandDao, ioDispatcher: CoroutineDispatcher) =
         Repository(commandDao, ioDispatcher)
 
 }
