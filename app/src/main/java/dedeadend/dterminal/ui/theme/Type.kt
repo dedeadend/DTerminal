@@ -1,9 +1,11 @@
 package dedeadend.dterminal.ui.theme
 
+import android.R
 import androidx.compose.material3.Typography
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -44,4 +46,14 @@ val terminalErrorTextStyle = TextStyle(
     fontSize = 14.sp,
     color = Color.Red,
     lineHeight = 20.sp
+)
+
+val historyTextStyle = TextStyle(
+    fontStyle = FontStyle.Italic,
+    fontSize = 18.sp,
+    lineHeight = 20.sp
+)
+val historyTitleStyle = TextStyle(
+    fontStyle = FontStyle.Italic,
+    fontSize = 14.sp
 )

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
@@ -35,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dedeadend.dterminal.domin.TerminalMessage
 import dedeadend.dterminal.domin.TerminalState
 import dedeadend.dterminal.ui.theme.terminalErrorTextStyle
@@ -60,7 +61,7 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
     val scrollState = rememberLazyListState()
-    val output by viewModel.output.collectAsState()
+    val output by viewModel.output.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         terminalCommand.collect { command ->
@@ -71,13 +72,13 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
     LaunchedEffect(output) {
         if (!output.isEmpty()) {
             yield()
-            scrollState.animateScrollToItem(output.size - 1)
+            scrollState.scrollToItem(output.size - 1)
         }
     }
 
     Scaffold(
         topBar = {
-            CustomTerminalTopBar(
+            TerminalTopBar(
                 viewModel,
                 onMenuClick = { viewModel.toggleToolsMenu(true) }
             )
@@ -105,61 +106,58 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                     OutputItem(it)
                 }
             }
-            Box(
+
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .animateContentSize()
-                    .heightIn(48.dp, maxHeight)
+                    .heightIn(0.dp, maxHeight)
+                    .padding(8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Card(
-                    modifier = Modifier.padding(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Row(
+                    TextField(
+                        value = viewModel.command,
+                        onValueChange = { viewModel.onCommandChange(it) },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        TextField(
-                            value = viewModel.command,
-                            onValueChange = { viewModel.onCommandChange(it) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .weight(1f),
-                            placeholder = {
-                                Text(
-                                    text = "Enter "
-                                            + (if (viewModel.isRoot) "#" else "$")
-                                            + " Commands..."
-                                )
-                            },
-                            maxLines = Int.MAX_VALUE
+                            .weight(1f),
+                        placeholder = {
+                            Text(
+                                text = "Enter "
+                                        + (if (viewModel.isRoot) "#" else "$")
+                                        + " Commands..."
+                            )
+                        },
+                        maxLines = Int.MAX_VALUE
 
-                        )
-                        Box(
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
-                                .clickable(enabled = viewModel.state != TerminalState.Running) {
-                                    viewModel.execute()
-                                }, contentAlignment = Alignment.Center
-                        ) {
-                            if (viewModel.state == TerminalState.Running) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Run",
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable(enabled = viewModel.state != TerminalState.Running) {
+                                viewModel.execute()
+                            }, contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.state == TerminalState.Running) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Run",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
                 }
@@ -170,23 +168,25 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
 }
 
 @Composable
-fun OutputItem(output: TerminalMessage) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Left,
-        text = output.message,
-        style = if (output.state == TerminalState.Success) terminalSuccessTextStyle else terminalErrorTextStyle
-    )
+private fun OutputItem(output: TerminalMessage) {
+    SelectionContainer {
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Left,
+            text = output.message,
+            style = if (output.state == TerminalState.Success) terminalSuccessTextStyle else terminalErrorTextStyle
+        )
+    }
 }
 
 @Composable
-fun CustomTerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit) {
+private fun TerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp, 8.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -196,7 +196,9 @@ fun CustomTerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit) 
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Box(contentAlignment = Alignment.BottomEnd) {
+        Box(
+            modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
+        ) {
             IconButton(onClick = onMenuClick)
             {
                 Icon(
@@ -209,7 +211,7 @@ fun CustomTerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit) 
 
                 expanded = viewmodel.toolsMenu,
                 onDismissRequest = { viewmodel.toggleToolsMenu(false) },
-                offset = DpOffset(0.dp, 0.dp)
+                offset = DpOffset(0.dp, 10.dp)
             ) {
                 DropdownMenuItem(
                     text = { Text("Clear output") },

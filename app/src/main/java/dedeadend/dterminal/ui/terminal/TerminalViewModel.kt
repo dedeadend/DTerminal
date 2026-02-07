@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dedeadend.dterminal.data.Repository
 import dedeadend.dterminal.domin.CommandExecutor
+import dedeadend.dterminal.domin.History
 import dedeadend.dterminal.domin.TerminalMessage
 import dedeadend.dterminal.domin.TerminalState
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TerminalViewModel @Inject constructor(
     private val commandExecutor: CommandExecutor,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
+    private val repository : Repository
 ) : ViewModel() {
 
     var state by mutableStateOf(TerminalState.Idle)
@@ -59,6 +62,7 @@ class TerminalViewModel @Inject constructor(
     fun execute() {
         viewModelScope.launch {
             state = TerminalState.Running
+            repository.insertToHistory(History(command = command))
             val cmd = command
             command = ""
             try {
@@ -78,5 +82,5 @@ class TerminalViewModel @Inject constructor(
         }
     }
 
-    fun terminate() = viewModelScope.launch { _output.update { it + commandExecutor.cancel() } }
+    fun terminate() = viewModelScope.launch(ioDispatcher) { _output.update { it + commandExecutor.cancel() } }
 }

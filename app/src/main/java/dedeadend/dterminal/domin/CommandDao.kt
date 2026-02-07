@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CommandDao {
-    @Query("SELECT * FROM history")
+    @Query("SELECT * FROM history ORDER BY id DESC")
     fun getAllHistory(): Flow<List<History>>
 
     @Query("SELECT * FROM script")

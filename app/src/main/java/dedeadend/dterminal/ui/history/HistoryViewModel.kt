@@ -35,7 +35,7 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun undoClearHistory() {
+    fun undoDeleteHistoryItems() {
         viewModelScope.launch {
             historyBackup?.let {
                 repository.restoreHistory(historyBackup!!)
@@ -44,19 +44,20 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun deleteHistoryCommand(id: Int) {
+    fun deleteHistoryCommand(historyCommand: History) {
         viewModelScope.launch(ioDispatcher) {
-            history.value.findLast { it.id == id }?.let { historyBackup = listOf(it) }
-            repository.deleteHistoryWithId(id)
+            historyBackup = listOf(historyCommand)
+            repository.deleteHistoryWithId(historyCommand.id)
+            _eventFlow.send(UiEvent.ShowSnackbar("History Item Deleted", "Undo"))
         }
     }
-
-    fun undoDeleteHistoryCommand(id: Int) {
-        viewModelScope.launch(ioDispatcher) {
-            historyBackup?.let {
-                repository.insertToHistory(historyBackup!!.get(0))
-            }
-        }
-    }
+//
+//    fun undoDeleteHistoryCommand(id: Int) {
+//        viewModelScope.launch(ioDispatcher) {
+//            historyBackup?.let {
+//                repository.insertToHistory(historyBackup!!.get(0))
+//            }
+//        }
+//    }
 
 }

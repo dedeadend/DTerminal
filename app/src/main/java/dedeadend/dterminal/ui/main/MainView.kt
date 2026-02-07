@@ -1,10 +1,12 @@
 package dedeadend.dterminal.ui.main
 
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -17,9 +19,9 @@ fun Main(
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    //HandleNavigationState(navController, viewModel)
 
     NavigationSuiteScaffold(
+        modifier = Modifier.imePadding(),
         navigationSuiteItems = {
             AppDestinations.entries.forEach {
                 item(
@@ -45,30 +47,3 @@ fun Main(
         AppNavigation(navController, viewModel)
     }
 }
-/*
-@Composable
-fun HandleNavigationState(
-    navController: NavHostController,
-    viewModel: MainViewModel
-) {
-    LaunchedEffect(viewModel.currentScreen) {
-        if (navController.currentDestination?.route != viewModel.currentScreen.name) {
-            navController.navigate(viewModel.currentScreen.name) {
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
-                launchSingleTop = true
-                restoreState = true
-            }
-        }
-    }
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    LaunchedEffect(navBackStackEntry) {
-        val route = navBackStackEntry?.destination?.route
-        if (route != null) {
-            val screen = AppDestinations.valueOf(route)
-            if (viewModel.currentScreen != screen)
-                viewModel.navigateTO(screen)
-        }
-    }
-}*/

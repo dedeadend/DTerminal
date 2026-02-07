@@ -28,8 +28,8 @@ fun AppNavigation(navController: NavHostController, mainVM: MainViewModel) {
             Terminal(terminalCommand = mainVM.terminalCommand)
         }
         composable(AppDestinations.HISTORY.name) {
-            History(onHistoryItemClick = { command ->
-                mainVM.onHistoryItemClicked(command)
+            History(onHistoryItemExecuteClick = { command ->
+                mainVM.onHistoryItemExecuteClicked(command)
             })
         }
         composable(AppDestinations.Scripts.name) {
