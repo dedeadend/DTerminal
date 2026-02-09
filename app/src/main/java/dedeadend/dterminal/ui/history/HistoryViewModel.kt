@@ -9,6 +9,7 @@ import dedeadend.dterminal.domin.UiEvent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,6 +21,7 @@ class HistoryViewModel @Inject constructor(
     private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val history = repository.getHistory()
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     private var historyBackup: List<History>? = null
 
@@ -51,13 +53,4 @@ class HistoryViewModel @Inject constructor(
             _eventFlow.send(UiEvent.ShowSnackbar("History Item Deleted", "Undo"))
         }
     }
-//
-//    fun undoDeleteHistoryCommand(id: Int) {
-//        viewModelScope.launch(ioDispatcher) {
-//            historyBackup?.let {
-//                repository.insertToHistory(historyBackup!!.get(0))
-//            }
-//        }
-//    }
-
 }

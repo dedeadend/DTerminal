@@ -27,7 +27,9 @@ fun AppNavigation(navController: NavHostController, mainVM: MainViewModel) {
         composable(AppDestinations.TERMINAL.name) {
             Terminal(terminalCommand = mainVM.terminalCommand)
         }
-        composable(AppDestinations.HISTORY.name) {
+        composable(
+            AppDestinations.HISTORY.name,
+        ) {
             History(onHistoryItemExecuteClick = { command ->
                 mainVM.onHistoryItemExecuteClicked(command)
             })

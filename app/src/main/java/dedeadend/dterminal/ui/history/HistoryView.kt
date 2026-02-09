@@ -1,5 +1,6 @@
 package dedeadend.dterminal.ui.history
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -102,24 +103,34 @@ fun History(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             reverseLayout = true
         ) {
-            itemsIndexed(items = history, key = {_, item -> item.id }) { index, item ->
-                Box(
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = tween(
-                            durationMillis = 500,
-                            delayMillis = (index * 100).coerceAtMost(500) // حداکثر نیم ثانیه تاخیر
-                        ),
-                        fadeOutSpec = null, // انیمیشن موقع غیب شدن
-                        placementSpec = spring( // انیمیشن جابجایی بقیه آیتم‌ها
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        )
+            items(items = history, key = { item -> item.id }) { item ->
+                val animatedProgress = remember { Animatable(0f) }
+                LaunchedEffect(Unit) {
+                    animatedProgress.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 500)
                     )
+                }
+                Box(
+                    modifier = Modifier
+                        .animateItem(
+                            fadeInSpec = null,
+                            fadeOutSpec = null,
+                            placementSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+                        .graphicsLayer {
+                            alpha = animatedProgress.value
+                            translationY = (1f - animatedProgress.value) * 50f
+                            scaleX = 0.5f + (animatedProgress.value * 0.5f)
+                        }
                 ) {
                     HistoryItem(
                         history = item,
                         onExecuteClick = { onHistoryItemExecuteClick(item.command) },
-                        onDeleteSwipe = { viewmodel.deleteHistoryCommand(it) }
+                        onDeleteSwipe = { viewmodel.deleteHistoryCommand(item) }
                     )
                 }
             }
@@ -187,7 +198,7 @@ private fun HistoryItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
+                        .height(intrinsicSize = IntrinsicSize.Min),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     VerticalDivider(

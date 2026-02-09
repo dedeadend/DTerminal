@@ -94,19 +94,23 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                     8.dp
                 )
         ) {
-            LazyColumn(
-                state = scrollState,
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .weight(1f)
+                    .padding(8.dp, 0.dp, 8.dp, 8.dp),
             ) {
-                items(output) {
-                    OutputItem(it)
+                LazyColumn(
+                    state = scrollState,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(output) {
+                        OutputItem(it)
+                    }
                 }
             }
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
