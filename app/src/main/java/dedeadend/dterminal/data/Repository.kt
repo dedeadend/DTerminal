@@ -3,6 +3,8 @@ package dedeadend.dterminal.data
 import dedeadend.dterminal.domin.CommandDao
 import dedeadend.dterminal.domin.History
 import dedeadend.dterminal.domin.Script
+import dedeadend.dterminal.domin.TerminalLog
+import dedeadend.dterminal.domin.TerminalLogDao
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -10,10 +12,14 @@ import javax.inject.Inject
 
 class Repository @Inject constructor(
     private val commandDao: CommandDao,
+    private val terminalLogDao: TerminalLogDao,
     private val ioDispatcher: CoroutineDispatcher
 ) {
     fun getHistory(): Flow<List<History>> = commandDao.getAllHistory()
     fun getScripts(): Flow<List<Script>> = commandDao.getAllScripts()
+
+    fun getLogs(): Flow<List<TerminalLog>> = terminalLogDao.getLogs()
+
 
     suspend fun insertToHistory(command: History) = withContext(ioDispatcher) {
         commandDao.insertHistory(command)
@@ -21,6 +27,10 @@ class Repository @Inject constructor(
 
     suspend fun insertToScripts(command: Script) = withContext(ioDispatcher) {
         commandDao.insertScript(command)
+    }
+
+    suspend fun insertToLogs(log: TerminalLog) = withContext(ioDispatcher) {
+        terminalLogDao.insertLog(log)
     }
 
     suspend fun restoreHistory(commands: List<History>) = withContext(ioDispatcher) {
@@ -46,4 +56,9 @@ class Repository @Inject constructor(
     suspend fun deleteAllScripts() = withContext(ioDispatcher) {
         commandDao.deleteAllScripts()
     }
+
+    suspend fun deleteLogs() = withContext(ioDispatcher) {
+        terminalLogDao.deleteLogs()
+    }
+
 }

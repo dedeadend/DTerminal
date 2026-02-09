@@ -9,23 +9,26 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.data.Repository
 import dedeadend.dterminal.domin.CommandExecutor
 import dedeadend.dterminal.domin.History
-import dedeadend.dterminal.domin.TerminalMessage
+import dedeadend.dterminal.domin.TerminalLog
 import dedeadend.dterminal.domin.TerminalState
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import javax.inject.Inject
 
 @HiltViewModel
 class TerminalViewModel @Inject constructor(
     private val commandExecutor: CommandExecutor,
     private val ioDispatcher: CoroutineDispatcher,
-    private val repository : Repository
+    private val repository: Repository
 ) : ViewModel() {
 
+    val logs = repository.getLogs()
+        .flowOn(ioDispatcher)
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     var state by mutableStateOf(TerminalState.Idle)
         private set
 
@@ -37,10 +40,6 @@ class TerminalViewModel @Inject constructor(
 
     var command by mutableStateOf("")
         private set
-
-    private val _output = MutableStateFlow(emptyList<TerminalMessage>())
-    val output = _output.asStateFlow()
-
 
     fun toggleToolsMenu(show: Boolean) {
         toolsMenu = show
@@ -56,31 +55,53 @@ class TerminalViewModel @Inject constructor(
     }
 
     fun clearOutput() {
-        _output.update { emptyList() }
+        viewModelScope.launch(ioDispatcher) {
+            repository.deleteLogs()
+        }
     }
 
     fun execute() {
-        viewModelScope.launch {
+        if (command.trim().isEmpty())
+            return
+        viewModelScope.launch(ioDispatcher) {
             state = TerminalState.Running
-            repository.insertToHistory(History(command = command))
-            val cmd = command
+            val cmd = command.trim()
             command = ""
+            repository.insertToHistory(History(cmd))
+            repository.insertToLogs(
+                TerminalLog(
+                    TerminalState.Info,
+                    (if (isRoot) "#: " else "$: ") + cmd
+                )
+            )
             try {
-                commandExecutor.execute(cmd, isRoot).flowOn(ioDispatcher).collect { message ->
-                    _output.update { it + message }
+                commandExecutor.execute(cmd, isRoot).flowOn(ioDispatcher).collect { log ->
+                    repository.insertToLogs(log)
                 }
             } catch (e: Exception) {
-                _output.update {
-                    it + TerminalMessage(
+                repository.insertToLogs(
+                    TerminalLog(
                         TerminalState.Error,
                         e.message ?: "Unknown Error"
                     )
-                }
+                )
             } finally {
                 state = TerminalState.Idle
             }
         }
     }
 
-    fun terminate() = viewModelScope.launch(ioDispatcher) { _output.update { it + commandExecutor.cancel() } }
+    fun terminate() =
+        viewModelScope.launch(ioDispatcher) { repository.insertToLogs(commandExecutor.cancel()) }
+}
+
+fun terminalLog2String(terminalLog: TerminalLog): String {
+    return if (terminalLog.state == TerminalState.Info)
+        "\n" + SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss",
+            java.util.Locale.getDefault()
+        ).format(terminalLog.date) + "\n" + terminalLog.message
+    else
+        terminalLog.message
+
 }

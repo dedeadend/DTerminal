@@ -25,8 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -75,7 +75,7 @@ fun History(
                 val result = snackbarHostState.showSnackbar(
                     message = event.message,
                     actionLabel = event.actionLabel,
-                    duration = SnackbarDuration.Long,
+                    duration = SnackbarDuration.Short,
                     withDismissAction = true
                 )
                 if (result == SnackbarResult.ActionPerformed) {
@@ -184,8 +184,7 @@ private fun HistoryItem(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(0.dp, 8.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .padding(0.dp, 8.dp)
         ) {
             Column(
                 modifier = Modifier.padding(8.dp)
@@ -230,7 +229,7 @@ private fun HistoryItem(
                             }, contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            imageVector = Icons.Default.PlayArrow,
                             contentDescription = "Run",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )

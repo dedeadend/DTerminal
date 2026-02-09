@@ -46,9 +46,10 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domin.TerminalMessage
+import dedeadend.dterminal.domin.TerminalLog
 import dedeadend.dterminal.domin.TerminalState
 import dedeadend.dterminal.ui.theme.terminalErrorTextStyle
+import dedeadend.dterminal.ui.theme.terminalInfoTextStyle
 import dedeadend.dterminal.ui.theme.terminalSuccessTextStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.yield
@@ -61,18 +62,19 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
     val scrollState = rememberLazyListState()
-    val output by viewModel.output.collectAsStateWithLifecycle()
+    val logs by viewModel.logs.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         terminalCommand.collect { command ->
             viewModel.onCommandChange(command)
+            viewModel.execute()
         }
     }
 
-    LaunchedEffect(output) {
-        if (!output.isEmpty()) {
+    LaunchedEffect(logs) {
+        if (!logs.isEmpty()) {
             yield()
-            scrollState.scrollToItem(output.size - 1)
+            scrollState.scrollToItem(0)
         }
     }
 
@@ -104,10 +106,11 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                     state = scrollState,
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    reverseLayout = true
                 ) {
-                    items(output) {
-                        OutputItem(it)
+                    items(items = logs, key = { item -> item.id }) { item ->
+                        OutputItem(item)
                     }
                 }
             }
@@ -172,13 +175,17 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
 }
 
 @Composable
-private fun OutputItem(output: TerminalMessage) {
+private fun OutputItem(output: TerminalLog) {
     SelectionContainer {
         Text(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Left,
-            text = output.message,
-            style = if (output.state == TerminalState.Success) terminalSuccessTextStyle else terminalErrorTextStyle
+            text = terminalLog2String(output),
+            style = when (output.state) {
+                TerminalState.Info -> terminalInfoTextStyle
+                TerminalState.Error -> terminalErrorTextStyle
+                else -> terminalSuccessTextStyle
+            }
         )
     }
 }

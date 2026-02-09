@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import dedeadend.dterminal.data.AppDatabase
 import dedeadend.dterminal.data.Repository
 import dedeadend.dterminal.domin.CommandDao
+import dedeadend.dterminal.domin.TerminalLogDao
 import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Singleton
 
@@ -33,7 +34,16 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideRepository(commandDao: CommandDao, ioDispatcher: CoroutineDispatcher) =
-        Repository(commandDao, ioDispatcher)
+    fun provideTerminalLogDao(database: AppDatabase) = database.terminalLogDao()
+
+
+    @Provides
+    @Singleton
+    fun provideRepository(
+        commandDao: CommandDao,
+        terminalLogDao: TerminalLogDao,
+        ioDispatcher: CoroutineDispatcher
+    ) =
+        Repository(commandDao, terminalLogDao, ioDispatcher)
 
 }

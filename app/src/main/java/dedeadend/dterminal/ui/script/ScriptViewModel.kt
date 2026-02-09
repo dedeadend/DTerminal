@@ -9,6 +9,7 @@ import dedeadend.dterminal.domin.UiEvent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,6 +21,7 @@ class ScriptViewModel @Inject constructor(
     private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val scripts = repository.getScripts()
+        .flowOn(ioDispatcher)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     private var scriptsBackup: List<Script>? = null
 
@@ -27,10 +29,10 @@ class ScriptViewModel @Inject constructor(
     val eventFlow = _eventFlow.receiveAsFlow()
 
 
-    fun deleteScript(id: Int) {
+    fun deleteScript(scriptCommand: Script) {
         viewModelScope.launch(ioDispatcher) {
-            scripts.value.find { it.id == id }?.let { scriptsBackup = listOf(it) }
-            repository.deleteScriptWithId(id)
+            scriptsBackup = listOf(scriptCommand)
+            repository.deleteScriptWithId(scriptCommand.id)
         }
     }
 
@@ -41,5 +43,4 @@ class ScriptViewModel @Inject constructor(
             }
         }
     }
-
 }

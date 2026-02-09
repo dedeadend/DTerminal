@@ -39,13 +39,20 @@ val Typography = Typography(
 val terminalSuccessTextStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
     fontSize = 14.sp,
-    lineHeight = 20.sp
+    lineHeight = 18.sp
 )
 val terminalErrorTextStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
     fontSize = 14.sp,
     color = Color.Red,
-    lineHeight = 20.sp
+    lineHeight = 18.sp
+)
+
+val terminalInfoTextStyle = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontSize = 14.sp,
+    color = Color.Cyan,
+    lineHeight = 18.sp
 )
 
 val historyTextStyle = TextStyle(

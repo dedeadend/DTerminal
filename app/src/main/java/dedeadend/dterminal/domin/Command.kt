@@ -5,13 +5,19 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "history")
 data class History(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val command: String
+    val command: String,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0
 )
 
 @Entity(tableName = "script")
 data class Script(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
-    val command: String
+    val command: String,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0
+)
+
+@Entity(tableName = "log")
+data class Log(
+    val log: String,
+    @PrimaryKey val date: Long = System.currentTimeMillis()
 )
