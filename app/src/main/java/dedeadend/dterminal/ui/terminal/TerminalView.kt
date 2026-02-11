@@ -2,6 +2,9 @@ package dedeadend.dterminal.ui.terminal
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +24,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
@@ -37,10 +43,17 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
@@ -191,6 +204,19 @@ private fun OutputItem(output: TerminalLog) {
 
 @Composable
 private fun TerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit) {
+    var rotationAngle by remember { mutableStateOf(1080f) }
+
+    val animatedRotation by animateFloatAsState(
+        targetValue = rotationAngle,
+        animationSpec = tween(
+            durationMillis = 1500,
+            delayMillis = 500
+        ),
+        label = "TerminalRotation"
+    )
+    LaunchedEffect(Unit) {
+        rotationAngle -= 1080f
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -200,12 +226,39 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "DTerminal",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(0.dp, 12.dp, 0.dp, 0.dp)
+                    .size(44.dp)
+                    .background(Color.Transparent, shape = CircleShape)
+                    .padding(0.dp, 10.dp, 0.dp, 0.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = dedeadend.dterminal.R.mipmap.ic_launcher_foreground),
+                    contentDescription = "App Icon",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .clickable(true) {
+                            rotationAngle -= 1080f
+                        }
+                        .graphicsLayer {
+                            rotationZ = animatedRotation
+                        },
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Text(
+                text = "DTerminal",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         Box(
             modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)
@@ -227,22 +280,43 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel, onMenuClick: () -> Unit
                 DropdownMenuItem(
                     text = { Text("Clear output") },
                     onClick = {
-                        viewmodel.clearOutput()
                         viewmodel.toggleToolsMenu(false)
+                        viewmodel.clearOutput()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ClearAll,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 )
                 DropdownMenuItem(
                     text = { Text("Terminate process") },
                     onClick = {
-                        viewmodel.terminate()
                         viewmodel.toggleToolsMenu(false)
+                        viewmodel.terminate()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Stop",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 )
                 DropdownMenuItem(
                     text = { Text(if (viewmodel.isRoot) "Switch to Shell mode" else "Switch to Root mode") },
                     onClick = {
-                        viewmodel.toggleRoot()
                         viewmodel.toggleToolsMenu(false)
+                        viewmodel.toggleRoot()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Grass,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 )
             }

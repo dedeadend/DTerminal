@@ -1,15 +1,15 @@
 package dedeadend.dterminal.domin
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.DensitySmall
+import androidx.compose.material.icons.filled.History
 import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class AppDestinations(
     val icon: ImageVector
 ) {
-    Scripts(Icons.Default.Favorite),
-    TERMINAL(Icons.Default.Home),
-    HISTORY(Icons.Default.DateRange)
+    Scripts(Icons.Default.DensitySmall),
+    TERMINAL(Icons.Default.Code),
+    HISTORY(Icons.Default.History)
 }

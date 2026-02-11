@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -251,13 +254,33 @@ private fun HistoryTopBar(onClearHistoryClick: () -> Unit) {
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "History",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Bold
-        )
-
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(0.dp, 12.dp, 0.dp, 0.dp)
+                    .size(44.dp)
+                    .background(Color.Transparent, shape = CircleShape)
+                    .padding(0.dp, 10.dp, 0.dp, 0.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = dedeadend.dterminal.R.mipmap.ic_launcher_foreground),
+                    contentDescription = "App Icon",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Text(
+                text = "History",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Box(modifier = Modifier.padding(0.dp, 16.dp, 0.dp, 0.dp)) {
             IconButton(onClick = onClearHistoryClick)
             {
@@ -268,6 +291,5 @@ private fun HistoryTopBar(onClearHistoryClick: () -> Unit) {
                 )
             }
         }
-
     }
 }

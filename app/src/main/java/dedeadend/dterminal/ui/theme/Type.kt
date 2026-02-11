@@ -1,11 +1,8 @@
 package dedeadend.dterminal.ui.theme
 
-import android.R
 import androidx.compose.material3.Typography
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -44,13 +41,13 @@ val terminalSuccessTextStyle = TextStyle(
 val terminalErrorTextStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
     fontSize = 14.sp,
-    color = InfoTextColor,
+    color = ErrorTextColor,
     lineHeight = 18.sp
 )
 
 val terminalInfoTextStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
     fontSize = 14.sp,
-    color = ErrorTextColor,
+    color = InfoTextColor,
     lineHeight = 18.sp
 )

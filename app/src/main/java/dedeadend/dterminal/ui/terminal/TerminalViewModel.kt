@@ -12,10 +12,13 @@ import dedeadend.dterminal.domin.History
 import dedeadend.dterminal.domin.TerminalLog
 import dedeadend.dterminal.domin.TerminalState
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import javax.inject.Inject
 
@@ -63,8 +66,8 @@ class TerminalViewModel @Inject constructor(
     fun execute() {
         if (command.trim().isEmpty())
             return
+        state = TerminalState.Running
         viewModelScope.launch(ioDispatcher) {
-            state = TerminalState.Running
             val cmd = command.trim()
             command = ""
             repository.insertToHistory(History(cmd))
@@ -75,7 +78,7 @@ class TerminalViewModel @Inject constructor(
                 )
             )
             try {
-                commandExecutor.execute(cmd, isRoot).flowOn(ioDispatcher).collect { log ->
+                commandExecutor.execute(cmd, isRoot).collect { log ->
                     repository.insertToLogs(log)
                 }
             } catch (e: Exception) {
@@ -86,7 +89,9 @@ class TerminalViewModel @Inject constructor(
                     )
                 )
             } finally {
-                state = TerminalState.Idle
+                withContext(NonCancellable + Dispatchers.Main) {
+                    state = TerminalState.Idle
+                }
             }
         }
     }
@@ -97,7 +102,7 @@ class TerminalViewModel @Inject constructor(
 
 fun terminalLog2String(terminalLog: TerminalLog): String {
     return if (terminalLog.state == TerminalState.Info)
-        "\n" + SimpleDateFormat(
+        "\n\n" + SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss",
             java.util.Locale.getDefault()
         ).format(terminalLog.date) + "\n" + terminalLog.message

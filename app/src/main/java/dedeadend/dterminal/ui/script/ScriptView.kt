@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -70,6 +71,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -111,8 +114,8 @@ fun Script(
         derivedStateOf {
             scrollState.firstVisibleItemIndex == 0 || previousIndex > scrollState.firstVisibleItemIndex
                 .also {
-                previousIndex = scrollState.firstVisibleItemIndex
-            }
+                    previousIndex = scrollState.firstVisibleItemIndex
+                }
         }
     }
 
@@ -324,8 +327,25 @@ private fun ScriptTopBar() {
             .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp),
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.Start
     ) {
+        Box(
+            modifier = Modifier
+                .padding(0.dp, 12.dp, 0.dp, 0.dp)
+                .size(44.dp)
+                .background(Color.Transparent, shape = CircleShape)
+                .padding(0.dp, 10.dp, 0.dp, 0.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(id = dedeadend.dterminal.R.mipmap.ic_launcher_foreground),
+                contentDescription = "App Icon",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        }
         Text(
             text = "Scripts",
             style = MaterialTheme.typography.titleLarge,
