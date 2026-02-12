@@ -10,16 +10,7 @@ output-metadata.json
 
 # --- Android Studio / IntelliJ ---
 *.iml
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/dictionaries
-.idea/libraries
-.idea/caches
-.idea/navEditor.xml
-.idea/deploymentTargetDropDown.xml
-.idea/render.experimental.xml
+.idea/
 /captures/
 .externalNativeBuild/
 .cxx/
