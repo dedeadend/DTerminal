@@ -89,7 +89,7 @@ fun Script(
     onSciptItemExecuteClick: (String) -> Unit
 ) {
     val scrollState = rememberLazyListState()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scripts by viewModel.scripts.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -323,7 +323,7 @@ private fun ScriptTopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(90.dp)
             .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp),
         verticalAlignment = Alignment.Bottom,
@@ -331,14 +331,14 @@ private fun ScriptTopBar() {
     ) {
         Box(
             modifier = Modifier
-                .padding(0.dp, 12.dp, 0.dp, 0.dp)
-                .size(44.dp)
+                .padding(0.dp, 18.dp, 0.dp, 0.dp)
+                .size(46.dp)
                 .background(Color.Transparent, shape = CircleShape)
                 .padding(0.dp, 10.dp, 0.dp, 0.dp),
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                painter = painterResource(id = dedeadend.dterminal.R.mipmap.ic_launcher_foreground),
+                painter = painterResource(id = dedeadend.dterminal.R.drawable.ic_launcher_foreground),
                 contentDescription = "App Icon",
                 modifier = Modifier
                     .fillMaxSize()

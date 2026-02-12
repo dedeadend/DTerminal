@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="Theme.DTerminal" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/avd_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.DTerminal</item>
+    </style>
 </resources>

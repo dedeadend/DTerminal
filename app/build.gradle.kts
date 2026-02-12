@@ -64,4 +64,5 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.core.splashscreen)
 }
