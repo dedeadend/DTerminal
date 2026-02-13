@@ -139,7 +139,7 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                             Text(
                                 text = "Enter "
                                         + (if (viewModel.isRoot) "#" else "$")
-                                        + " Commands..."
+                                        + " commands..."
                             )
                         },
                         maxLines = Int.MAX_VALUE

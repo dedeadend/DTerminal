@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.1"
+agp = "9.0.0"
 coreKtx = "1.17.0"
 coreSplashscreen = "1.2.0"
 hiltAndroid = "2.59.1"
@@ -47,4 +47,3 @@ room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
