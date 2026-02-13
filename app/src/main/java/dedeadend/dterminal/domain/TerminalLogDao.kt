@@ -1,4 +1,4 @@
-package dedeadend.dterminal.domin
+package dedeadend.dterminal.domain
 
 import androidx.room.Dao
 import androidx.room.Insert

@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domin.TerminalLog
-import dedeadend.dterminal.domin.TerminalState
+import dedeadend.dterminal.domain.TerminalLog
+import dedeadend.dterminal.domain.TerminalState
 import dedeadend.dterminal.ui.BaseTopBar
 import dedeadend.dterminal.ui.theme.terminalErrorTextStyle
 import dedeadend.dterminal.ui.theme.terminalInfoTextStyle

@@ -1,8 +1,8 @@
 package dedeadend.dterminal.data
 
-import dedeadend.dterminal.domin.CommandExecutor
-import dedeadend.dterminal.domin.TerminalLog
-import dedeadend.dterminal.domin.TerminalState
+import dedeadend.dterminal.domain.CommandExecutor
+import dedeadend.dterminal.domain.TerminalLog
+import dedeadend.dterminal.domain.TerminalState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

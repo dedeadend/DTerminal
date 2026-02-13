@@ -5,8 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import dedeadend.dterminal.domin.AppDestinations
-import dedeadend.dterminal.domin.UiEvent
+import dedeadend.dterminal.domain.AppDestinations
+import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.ui.history.History
 import dedeadend.dterminal.ui.main.MainViewModel
 import dedeadend.dterminal.ui.script.Script

@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domin.Script
-import dedeadend.dterminal.domin.UiEvent
+import dedeadend.dterminal.domain.Script
+import dedeadend.dterminal.domain.UiEvent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
@@ -58,7 +58,7 @@ class ScriptViewModel @Inject constructor(
     fun undoDeleteScript() {
         viewModelScope.launch(ioDispatcher) {
             scriptsBackup?.let {
-                repository.insertToScripts(scriptsBackup!![0])
+                repository.insertToScripts(it.last())
                 scriptsBackup = null
             }
         }

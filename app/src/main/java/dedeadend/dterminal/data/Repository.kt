@@ -1,10 +1,10 @@
 package dedeadend.dterminal.data
 
-import dedeadend.dterminal.domin.CommandDao
-import dedeadend.dterminal.domin.History
-import dedeadend.dterminal.domin.Script
-import dedeadend.dterminal.domin.TerminalLog
-import dedeadend.dterminal.domin.TerminalLogDao
+import dedeadend.dterminal.domain.CommandDao
+import dedeadend.dterminal.domain.History
+import dedeadend.dterminal.domain.Script
+import dedeadend.dterminal.domain.TerminalLog
+import dedeadend.dterminal.domain.TerminalLogDao
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext

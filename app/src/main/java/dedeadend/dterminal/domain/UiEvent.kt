@@ -1,4 +1,4 @@
-package dedeadend.dterminal.domin
+package dedeadend.dterminal.domain
 
 sealed class UiEvent {
     data class ShowSnackbar(val message: String, val actionLabel: String? = null) : UiEvent()

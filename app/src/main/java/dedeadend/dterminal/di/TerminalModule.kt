@@ -5,7 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dedeadend.dterminal.data.ShellCommandExecutor
-import dedeadend.dterminal.domin.CommandExecutor
+import dedeadend.dterminal.domain.CommandExecutor
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 

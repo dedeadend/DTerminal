@@ -11,8 +11,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dedeadend.dterminal.data.AppDatabase
 import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domin.CommandDao
-import dedeadend.dterminal.domin.TerminalLogDao
+import dedeadend.dterminal.domain.CommandDao
+import dedeadend.dterminal.domain.TerminalLogDao
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

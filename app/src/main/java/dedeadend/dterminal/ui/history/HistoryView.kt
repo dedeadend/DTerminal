@@ -45,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,9 +56,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domin.History
-import dedeadend.dterminal.domin.UiEvent
+import dedeadend.dterminal.domain.History
+import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.ui.BaseTopBar
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @Composable
 fun History(
@@ -67,18 +70,23 @@ fun History(
     val scrollState = rememberLazyListState()
     val history by viewModel.history.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
+    var snackbarJob: Job? = null
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             if (event is UiEvent.ShowSnackbar) {
-                val result = snackbarHostState.showSnackbar(
-                    message = event.message,
-                    actionLabel = event.actionLabel,
-                    duration = SnackbarDuration.Short,
-                    withDismissAction = true
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    viewModel.undoDeleteHistoryItems()
+                snackbarJob?.cancel()
+                snackbarJob = snackbarScope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = event.actionLabel,
+                        duration = SnackbarDuration.Short,
+                        withDismissAction = true
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.undoDeleteHistoryItems()
+                    }
                 }
             }
         }
@@ -129,7 +137,7 @@ fun History(
                     HistoryItem(
                         history = item,
                         onExecuteClick = { onHistoryItemExecuteClick(item.command) },
-                        onDeleteSwipe = { viewModel.deleteHistoryCommand(item) }
+                        onDeleteSwipe = { viewModel.deleteHistoryItem(item) }
                     )
                 }
             }
@@ -143,18 +151,19 @@ private fun HistoryItem(
     onExecuteClick: () -> Unit,
     onDeleteSwipe: () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.StartToEnd || value == SwipeToDismissBoxValue.EndToStart) {
-                onDeleteSwipe()
-                true
-            } else {
-                false
-            }
+    val dismissState = rememberSwipeToDismissBoxState()
+    LaunchedEffect(history) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
         }
-    )
+    }
     SwipeToDismissBox(
         state = dismissState,
+        onDismiss = { dismissState ->
+            if (dismissState == SwipeToDismissBoxValue.StartToEnd || dismissState == SwipeToDismissBoxValue.EndToStart) {
+                onDeleteSwipe()
+            }
+        },
         backgroundContent = {
             Row(
                 modifier = Modifier
@@ -162,82 +171,79 @@ private fun HistoryItem(
                     .padding(1.dp, 9.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.Red),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement =
+                    if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd)
+                        Arrangement.Start
+                    else
+                        Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Delete",
                     tint = Color.White,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = Color.White,
-                    modifier = Modifier.padding(end = 16.dp)
+                    modifier = Modifier.padding(16.dp, 0.dp)
                 )
             }
-        }
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(0.dp, 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(8.dp)
+        },
+        content = {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 8.dp)
             ) {
-                Text(
-                    text = "Command:",
-                    textAlign = TextAlign.Left,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontStyle = FontStyle.Italic
-                )
-                Row(
-                    modifier = Modifier
-                        .height(intrinsicSize = IntrinsicSize.Min),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.padding(8.dp)
                 ) {
-                    VerticalDivider(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(4.dp),
-                        thickness = 2.dp,
-                        color = Color.Gray
+                    Text(
+                        text = "Command:",
+                        textAlign = TextAlign.Left,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontStyle = FontStyle.Italic
                     )
-                    SelectionContainer(
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp)
+                            .height(intrinsicSize = IntrinsicSize.Min),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = history.command,
-                            textAlign = TextAlign.Left,
-                            style = MaterialTheme.typography.titleMedium
+                        VerticalDivider(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(4.dp),
+                            thickness = 2.dp,
+                            color = Color.Gray
                         )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable(enabled = true) {
-                                onExecuteClick()
-                            }, contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Run",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                        SelectionContainer(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = history.command,
+                                textAlign = TextAlign.Left,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .clickable(enabled = true) {
+                                    onExecuteClick()
+                                }, contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Run",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             }
-        }
-    }
-
+        })
 }
 
 @Composable

@@ -1,4 +1,4 @@
-package dedeadend.dterminal.domin
+package dedeadend.dterminal.domain
 
 import kotlinx.coroutines.flow.Flow
 

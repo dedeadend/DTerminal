@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domin.History
-import dedeadend.dterminal.domin.UiEvent
+import dedeadend.dterminal.domain.History
+import dedeadend.dterminal.domain.UiEvent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,20 +37,20 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun undoDeleteHistoryItems() {
-        viewModelScope.launch {
-            historyBackup?.let {
-                repository.restoreHistory(historyBackup!!)
-                historyBackup = null
-            }
+    fun deleteHistoryItem(history: History) {
+        viewModelScope.launch(ioDispatcher) {
+            historyBackup = listOf(history)
+            repository.deleteHistoryWithId(history.id)
+            _eventFlow.send(UiEvent.ShowSnackbar("History Item Deleted", "Undo"))
         }
     }
 
-    fun deleteHistoryCommand(historyCommand: History) {
-        viewModelScope.launch(ioDispatcher) {
-            historyBackup = listOf(historyCommand)
-            repository.deleteHistoryWithId(historyCommand.id)
-            _eventFlow.send(UiEvent.ShowSnackbar("History Item Deleted", "Undo"))
+    fun undoDeleteHistoryItems() {
+        viewModelScope.launch {
+            historyBackup?.let {
+                repository.restoreHistory(it)
+                historyBackup = null
+            }
         }
     }
 }

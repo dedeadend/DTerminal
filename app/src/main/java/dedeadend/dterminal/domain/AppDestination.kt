@@ -1,4 +1,4 @@
-package dedeadend.dterminal.domin
+package dedeadend.dterminal.domain
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code

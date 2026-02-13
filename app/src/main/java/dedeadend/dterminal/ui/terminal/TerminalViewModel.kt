@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domin.CommandExecutor
-import dedeadend.dterminal.domin.History
-import dedeadend.dterminal.domin.TerminalLog
-import dedeadend.dterminal.domin.TerminalState
+import dedeadend.dterminal.domain.CommandExecutor
+import dedeadend.dterminal.domain.History
+import dedeadend.dterminal.domain.TerminalLog
+import dedeadend.dterminal.domain.TerminalState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable

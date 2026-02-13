@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -65,6 +64,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,9 +76,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domin.Script
-import dedeadend.dterminal.domin.UiEvent
+import dedeadend.dterminal.domain.Script
+import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.ui.BaseTopBar
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,18 +92,23 @@ fun Script(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scripts by viewModel.scripts.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
+    var snackbarJob: Job? = null
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             if (event is UiEvent.ShowSnackbar) {
-                val result = snackbarHostState.showSnackbar(
-                    message = event.message,
-                    actionLabel = event.actionLabel,
-                    duration = SnackbarDuration.Short,
-                    withDismissAction = true
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    viewModel.undoDeleteScript()
+                snackbarJob?.cancel()
+                snackbarJob = snackbarScope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = event.actionLabel,
+                        duration = SnackbarDuration.Short,
+                        withDismissAction = true
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.undoDeleteScript()
+                    }
                 }
             }
         }
@@ -118,7 +125,7 @@ fun Script(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0),
+//        contentWindowInsets = WindowInsets(0),
         topBar = { ScriptTopBar() },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
@@ -207,18 +214,19 @@ private fun ScriptItem(
     onEditClick: () -> Unit,
     onDeleteSwipe: () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.StartToEnd || value == SwipeToDismissBoxValue.EndToStart) {
-                onDeleteSwipe()
-                true
-            } else {
-                false
-            }
+    val dismissState = rememberSwipeToDismissBoxState()
+    LaunchedEffect(script) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
         }
-    )
+    }
     SwipeToDismissBox(
         state = dismissState,
+        onDismiss = { dismissState ->
+            if (dismissState == SwipeToDismissBoxValue.StartToEnd || dismissState == SwipeToDismissBoxValue.EndToStart) {
+                onDeleteSwipe()
+            }
+        },
         backgroundContent = {
             Row(
                 modifier = Modifier
@@ -226,95 +234,93 @@ private fun ScriptItem(
                     .padding(1.dp, 9.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.Red),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement =
+                    if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd)
+                        Arrangement.Start
+                    else
+                        Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Delete",
                     tint = Color.White,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = Color.White,
-                    modifier = Modifier.padding(end = 16.dp)
+                    modifier = Modifier.padding(16.dp, 0.dp)
                 )
             }
-        }
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(0.dp, 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(8.dp)
+        },
+        content = {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 8.dp)
             ) {
-                Text(
-                    text = "Name:",
-                    textAlign = TextAlign.Left,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontStyle = FontStyle.Italic
-                )
-                Row(
-                    modifier = Modifier
-                        .height(intrinsicSize = IntrinsicSize.Min),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.padding(8.dp)
                 ) {
-                    VerticalDivider(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(4.dp),
-                        thickness = 2.dp,
-                        color = Color.Gray
+                    Text(
+                        text = "Name:",
+                        textAlign = TextAlign.Left,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontStyle = FontStyle.Italic
                     )
-                    SelectionContainer(
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp)
+                            .height(intrinsicSize = IntrinsicSize.Min),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = script.name,
-                            textAlign = TextAlign.Left,
-                            style = MaterialTheme.typography.titleMedium
+                        VerticalDivider(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(4.dp),
+                            thickness = 2.dp,
+                            color = Color.Gray
                         )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable(enabled = true) { onEditClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable(enabled = true) { onExecuteClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Run",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                        SelectionContainer(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = script.name,
+                                textAlign = TextAlign.Left,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .clickable(enabled = true) { onEditClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .clickable(enabled = true) { onExecuteClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Run",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             }
-        }
-    }
+        })
 }
 
 @Composable
