@@ -16,12 +16,12 @@
 
 **A next-generation terminal emulator for Android that redefines the mobile shell experience.**
 
-Built from the ground up with **Jetpack Compose**, DTerminal combines the raw power of standard and root shells with a lightning-fast, minimalist interface. It’s the perfect balance of s1mple aesthetics and professional power.
+Built from the ground up with **Jetpack Compose**, DTerminal combines the raw power of standard and root shells with a **lightning-fast** and **modern interface**. It’s the perfect balance of simple aesthetics and professional power.
 
 
 ## ⚡ Fast by Design, Modern by Tech
 
-Forget clunky, dated terminal interfaces. DTerminal is engineered for **instant startups and fluid interaction**. With its reactive UI and asynchronous command engine, you get a high-performance environment that responds without a millisecond of lag.
+Forget clunky and dated terminal interfaces. DTerminal is engineered for **fluid interaction**. With its reactive UI and asynchronous command engine, you get a high-performance environment that responds without a millisecond of lag.
 
 ## 🌟 Key Features
 
@@ -110,7 +110,9 @@ You can find me at
 
 ## ❤️ Donation
 
-If you find this project helpful, you can buy me a coffee
+If you find this project helpful, please give it a ⭐
+
+You can also support the development by buying me a coffee:
 
 <div align="left">
   <a href="https://nowpayments.io/donation/dedeadend" target="_blank" rel="noreferrer noopener">
