@@ -96,7 +96,7 @@ Contributions make the open-source community an amazing place to learn, inspire,
 
 ## ♠️ Support
 
-You can find me at
+Have questions or need help? Feel free to reach out:
 
 <div align="left">
   <a href="https://t.me/dedeadend" target="_blank">
