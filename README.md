@@ -14,20 +14,14 @@
 
 # 🍃 DTerminal
 
-**A next-generation terminal emulator for Android that redefines the mobile shell experience.**
+Forget clunky and dated terminals. DTerminal is a modern terminal emulator for Android, built with **Jetpack Compose** and **Material You**. It provides access to both standard and root shells through a reactive and asynchronous interface, designed for fluid performance and a clean, responsive user experience. All without the lag of traditional terminal apps.
 
-Built from the ground up with **Jetpack Compose**, DTerminal combines the raw power of standard and root shells with a **lightning-fast** and **modern interface**. It’s the perfect balance of simple aesthetics and professional power.
-
-
-## ⚡ Fast by Design, Modern by Tech
-
-Forget clunky and dated terminal interfaces. DTerminal is engineered for **fluid interaction**. With its reactive UI and asynchronous command engine, you get a high-performance environment that responds without a millisecond of lag.
 
 ## 🌟 Key Features
 
 - 🔓 **Full Shell Authority**: High-speed execution for both standard (sh) and root (su) commands.
-- 🎨 **Real-time Modern UI**: Instant, reactive customization of fonts and colors—see your changes as you type.
-- 🚀 **Ultra-Lightweight**: Optimized for speed and low battery consumption using the latest Material 3 standards.
+- 🎨 **Real-time Modern UI**: Instant reactive customization of fonts and colors.
+- 🚀 **Ultra-Lightweight**: Optimized for speed and low battery consumption using the latest Material You standards.
 
 | ⚡ Persistent Scripting | 📜 Smart Command History |
 | :---: | :---: |
