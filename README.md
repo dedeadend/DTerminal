@@ -26,7 +26,7 @@ Forget clunky and dated terminals. DTerminal is a modern terminal emulator for A
 | ⚡ Persistent Scripting | 📜 Smart Command History |
 | :---: | :---: |
 | ![Scripts Banner](screenshots/DTerminalScript.png) | ![History Banner](screenshots/DTerminalHistory.png) |
-| A smart workspace to save and execute your custom scripts, eliminating repetitive mobile typing. | Persistent access to your command history in a clean, organized layout. |
+| A smart workspace to save and execute your custom scripts. eliminating repetitive mobile typing. | Persistent access to your command history in a clean and organized layout. |
 
 
 ## 📥 Getting Started
