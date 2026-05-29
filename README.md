@@ -14,7 +14,7 @@
 
 # 🍃 DTerminal
 
-Forget clunky and dated terminals. DTerminal is a modern terminal emulator for Android, built with **Jetpack Compose** and **Material You**. It provides access to both standard and root shells through a reactive and asynchronous interface, designed for fluid performance and a clean, responsive user experience. All without the lag of traditional terminal apps.
+Forget clunky and dated terminals. DTerminal is a modern terminal emulator for Android, built with **Jetpack Compose**. It provides access to both standard and root shells through a reactive and asynchronous interface, designed for fluid performance and a clean, responsive user experience. All without the lag of traditional terminal apps.
 
 
 ## 🌟 Key Features
