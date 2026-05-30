@@ -20,7 +20,7 @@ Forget clunky and dated terminals. DTerminal is a modern terminal emulator for A
 
 - 💯 **Full Shell Authority**: High-speed execution for both standard (sh) and root (su) commands.
 - ⚡ **Ultra-Lightweight**: Optimized for speed and low battery consumption using the latest Material You standards.
-- 🚀 **Persistent Scripting**: A smart workspace to save and execute your custom scripts. eliminating repetitive mobile typing.
+- 🚀 **Persistent Scripting**: A smart workspace to save and execute your custom scripts. eliminating repetitive typing.
 - 📜 **Command History**: Persistent access to your command history in a clean and organized layout.
 - 🎨 **Real-time Modern UI**: Instant reactive customization of fonts and colors.
 
