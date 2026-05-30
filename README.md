@@ -1,7 +1,6 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dedeadend/DTerminal/master/screenshots/DTerminalTheme.png" alt="DTerminal Banner" width="100%">
+  <img src="screenshots/DTerminalTheme.png" alt="Dterminal Theme" width="100%">
 </p>
-
 
 <p align="center">
   <img src="https://img.shields.io/github/v/release/dedeadend/DTerminal?style=for-the-badge&color=green&logo=android" />
@@ -17,26 +16,31 @@
 Forget clunky and dated terminals. DTerminal is a modern terminal emulator for Android, built with **Jetpack Compose**. It provides access to both standard and root shells through a reactive and asynchronous interface, designed for fluid performance and a clean, responsive user experience. All without the lag of traditional terminal apps.
 
 
-## 🌟 Key Features
+## ✨ Features
 
-- 🔓 **Full Shell Authority**: High-speed execution for both standard (sh) and root (su) commands.
+- 💯 **Full Shell Authority**: High-speed execution for both standard (sh) and root (su) commands.
+- ⚡ **Ultra-Lightweight**: Optimized for speed and low battery consumption using the latest Material You standards.
+- 🚀 **Persistent Scripting**: A smart workspace to save and execute your custom scripts. eliminating repetitive mobile typing.
+- 📜 **Command History**: Persistent access to your command history in a clean and organized layout.
 - 🎨 **Real-time Modern UI**: Instant reactive customization of fonts and colors.
-- 🚀 **Ultra-Lightweight**: Optimized for speed and low battery consumption using the latest Material You standards.
 
-| ⚡ Persistent Scripting | 📜 Smart Command History |
+
+## 📸 Screenshots
+
+| Scripts | History |
 | :---: | :---: |
-| ![Scripts Banner](screenshots/DTerminalScript.png) | ![History Banner](screenshots/DTerminalHistory.png) |
-| A smart workspace to save and execute your custom scripts. eliminating repetitive mobile typing. | Persistent access to your command history in a clean and organized layout. |
+| <img src="screenshots/DTerminalScript.png" alt="Dterminal Script"> | <img src="screenshots/DTerminalHistory.png" alt="Dterminal History"> |
+
 
 
 ## 📥 Getting Started
 
-#### Prerequisites
+### Prerequisites
 
 - Android 8.0+ "Oreo"
 - (Optional) Root access for su commands
 
-#### Installation
+### Installation
 
 1. Download the latest released APK from the [Releases Page](https://github.com/dedeadend/DTerminal/releases/latest).
 2. Install downloaded APK file.
@@ -119,7 +123,9 @@ You can also support the development by buying me a coffee:
 
 Distributed under the GPL-3.0 License. See [LICENSE](LICENSE) for more information.
 
+
 ---
+
 
 <div align="center">
   Developed with 💚 by <a href="https://github.com/dedeadend">DeDeadend</a>
