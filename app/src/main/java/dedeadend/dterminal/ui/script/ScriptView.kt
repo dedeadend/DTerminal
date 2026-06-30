@@ -92,7 +92,6 @@ fun Script(
     onSciptItemExecuteClick: (String) -> Unit
 ) {
     val scrollState = rememberLazyListState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scripts by viewModel.scripts.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -227,7 +226,7 @@ fun Script(
         if (viewModel.isEditing) {
             ModalBottomSheet(
                 onDismissRequest = { viewModel.cancelEdit() },
-                sheetState = sheetState
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             ) {
                 EditSheetContent(viewModel)
             }

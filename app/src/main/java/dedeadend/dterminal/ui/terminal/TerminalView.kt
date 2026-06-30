@@ -173,7 +173,6 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                     }
                 }
             }
-
         }
     }
 }

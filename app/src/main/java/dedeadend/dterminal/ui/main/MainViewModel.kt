@@ -3,7 +3,7 @@ package dedeadend.dterminal.ui.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dedeadend.dterminal.domain.AppDestinations
+import dedeadend.dterminal.navigation.AppDestinations
 import dedeadend.dterminal.domain.UiEvent
 import jakarta.inject.Inject
 import kotlinx.coroutines.channels.Channel

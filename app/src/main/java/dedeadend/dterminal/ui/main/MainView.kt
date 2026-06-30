@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import dedeadend.dterminal.domain.AppDestinations
+import dedeadend.dterminal.navigation.AppDestinations
 import dedeadend.dterminal.navigation.AppNavigation
 
 @Composable
@@ -38,12 +38,7 @@ fun Main(
         navigationSuiteItems = {
             AppDestinations.entries.forEach {
                 item(
-                    icon = {
-                        Icon(
-                            it.icon,
-                            contentDescription = it.name
-                        )
-                    },
+                    icon = { Icon(it.icon, contentDescription = it.name) },
                     label = { Text(it.name) },
                     selected = navBackStackEntry?.destination?.route == it.name,
                     onClick = {

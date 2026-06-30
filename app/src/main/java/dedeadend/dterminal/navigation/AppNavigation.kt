@@ -5,7 +5,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import dedeadend.dterminal.domain.AppDestinations
 import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.ui.history.History
 import dedeadend.dterminal.ui.main.MainViewModel
@@ -18,8 +17,9 @@ fun AppNavigation(navController: NavHostController, mainVM: MainViewModel) {
         mainVM.navigationEvent.collect { event ->
             if (event is UiEvent.Navigate)
                 navController.navigate(event.route) {
-                    popUpTo(AppDestinations.TERMINAL.name)
+                    popUpTo(AppDestinations.TERMINAL.name) {saveState = true}
                     launchSingleTop = true
+                    restoreState = true
                 }
         }
     }
@@ -27,9 +27,7 @@ fun AppNavigation(navController: NavHostController, mainVM: MainViewModel) {
         composable(AppDestinations.TERMINAL.name) {
             Terminal(terminalCommand = mainVM.terminalCommand)
         }
-        composable(
-            AppDestinations.HISTORY.name,
-        ) {
+        composable(AppDestinations.HISTORY.name,) {
             History(onHistoryItemExecuteClick = { command ->
                 mainVM.onItemExecuteClicked(command)
             })
