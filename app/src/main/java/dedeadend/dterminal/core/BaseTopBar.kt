@@ -1,4 +1,4 @@
-package dedeadend.dterminal.ui
+package dedeadend.dterminal.core
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dedeadend.dterminal.R
 
 @Composable
 fun BaseTopBar(
@@ -65,7 +66,7 @@ fun BaseTopBar(
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
-                    painter = painterResource(id = dedeadend.dterminal.R.drawable.ic_launcher_foreground),
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
                     contentDescription = "App Icon",
                     modifier = Modifier
                         .fillMaxSize()

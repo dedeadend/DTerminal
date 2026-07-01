@@ -6,33 +6,34 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domain.CommandExecutor
-import dedeadend.dterminal.domain.SystemSettings
-import dedeadend.dterminal.domain.TerminalLog
-import dedeadend.dterminal.domain.TerminalState
-import kotlinx.coroutines.CoroutineDispatcher
+import dedeadend.dterminal.core.AppDispatchers
+import dedeadend.dterminal.domain.model.Settings
+import dedeadend.dterminal.domain.model.TerminalLog
+import dedeadend.dterminal.domain.model.TerminalState
+import dedeadend.dterminal.domain.repository.CommandExecutor
+import dedeadend.dterminal.domain.repository.SettingsRepository
+import dedeadend.dterminal.domain.repository.TerminalLogRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import javax.inject.Inject
 
 @HiltViewModel
 class TerminalViewModel @Inject constructor(
     private val commandExecutor: CommandExecutor,
-    private val ioDispatcher: CoroutineDispatcher,
-    private val repository: Repository
+    private val dispatchers: AppDispatchers,
+    private val settingsRepository: SettingsRepository,
+    private val terminalLogRepository: TerminalLogRepository
 ) : ViewModel() {
 
-    val systemSettings = repository.getSystemSettings()
-        .flowOn(ioDispatcher)
-        .stateIn(viewModelScope, SharingStarted.Lazily, SystemSettings())
+    val settings = settingsRepository.getSystemSettings()
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.Lazily, Settings())
 
-    val logs = repository.getLogs()
-        .flowOn(ioDispatcher)
+    val logs = terminalLogRepository.getLogs()
+        .flowOn(dispatchers.io)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     var state by mutableStateOf(TerminalState.Idle)
@@ -48,10 +49,10 @@ class TerminalViewModel @Inject constructor(
         private set
 
     init {
-        viewModelScope.launch(ioDispatcher) {
-            if (repository.getSystemSettings().first().isFirstBoot) {
+        viewModelScope.launch(dispatchers.io) {
+            if (settingsRepository.getSystemSettings().first().isFirstBoot) {
                 showWelcomeMessage()
-                repository.setFirstBootCompleted()
+                settingsRepository.setFirstBootCompleted()
             }
         }
     }
@@ -69,8 +70,8 @@ class TerminalViewModel @Inject constructor(
     }
 
     fun clearOutput() {
-        viewModelScope.launch(ioDispatcher) {
-            repository.clearLogs()
+        viewModelScope.launch(dispatchers.io) {
+            terminalLogRepository.clearLogs()
         }
     }
 
@@ -120,16 +121,13 @@ class TerminalViewModel @Inject constructor(
             
             """.trimIndent()
 
-        repository.addLog(TerminalLog(TerminalState.Success, welcomeMessage))
+        terminalLogRepository.addLog(TerminalLog(TerminalState.Success, welcomeMessage))
     }
 }
 
 fun terminalLog2String(terminalLog: TerminalLog): String {
     return if (terminalLog.state == TerminalState.Info)
-        "\n\n\n" + SimpleDateFormat(
-            "yyyy-MM-dd HH:mm:ss",
-            java.util.Locale.getDefault()
-        ).format(terminalLog.date) + "\n" + terminalLog.message + "\n"
+        "\n\n\n" + terminalLog.date + "\n" + terminalLog.message + "\n"
     else
         terminalLog.message
 

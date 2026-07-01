@@ -15,8 +15,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import dedeadend.dterminal.navigation.AppDestinations
-import dedeadend.dterminal.navigation.AppNavigation
+import dedeadend.dterminal.ui.navigation.AppDestinations
+import dedeadend.dterminal.ui.navigation.AppNavigation
 
 @Composable
 fun Main(

@@ -3,10 +3,10 @@ package dedeadend.dterminal.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domain.History
+import dedeadend.dterminal.core.AppDispatchers
 import dedeadend.dterminal.domain.UiEvent
-import kotlinx.coroutines.CoroutineDispatcher
+import dedeadend.dterminal.domain.model.History
+import dedeadend.dterminal.domain.repository.HistoryRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
@@ -17,11 +17,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val repository: Repository,
-    private val ioDispatcher: CoroutineDispatcher
+    private val historyRepository: HistoryRepository,
+    private val dispatchers: AppDispatchers
 ) : ViewModel() {
-    val history = repository.getHistory()
-        .flowOn(ioDispatcher)
+    val history = historyRepository.getHistory()
+        .flowOn(dispatchers.io)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     private var historyBackup: List<History>? = null
 
@@ -30,19 +30,19 @@ class HistoryViewModel @Inject constructor(
 
 
     fun clearHistory() {
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch(dispatchers.io) {
             if (history.value.isNotEmpty()) {
                 historyBackup = history.value.toList()
-                repository.clearHistory()
+                historyRepository.clearHistory()
                 _eventFlow.send(UiEvent.ShowSnackbar("History Cleared", "Undo"))
             }
         }
     }
 
     fun deleteHistoryItem(history: History) {
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch(dispatchers.io) {
             historyBackup = listOf(history)
-            repository.deleteHistoryWithId(history.id)
+            historyRepository.deleteHistoryWithId(history.id)
             _eventFlow.send(UiEvent.ShowSnackbar("History Item Deleted", "Undo"))
         }
     }
@@ -50,7 +50,7 @@ class HistoryViewModel @Inject constructor(
     fun undoDeleteHistoryItems() {
         viewModelScope.launch {
             historyBackup?.let {
-                repository.restoreHistory(it)
+                historyRepository.restoreHistory(it)
                 historyBackup = null
             }
         }

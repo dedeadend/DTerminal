@@ -1,4 +1,4 @@
-package dedeadend.dterminal.navigation
+package dedeadend.dterminal.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code

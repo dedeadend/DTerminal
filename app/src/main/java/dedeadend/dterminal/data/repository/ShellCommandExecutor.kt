@@ -1,27 +1,32 @@
-package dedeadend.dterminal.data
+package dedeadend.dterminal.data.repository
 
 import android.os.Build
 import android.os.SystemClock
-import dedeadend.dterminal.domain.CommandExecutor
-import dedeadend.dterminal.domain.History
-import dedeadend.dterminal.domain.TerminalLog
-import dedeadend.dterminal.domain.TerminalState
+import dedeadend.dterminal.core.AppDispatchers
+import dedeadend.dterminal.domain.model.History
+import dedeadend.dterminal.domain.model.TerminalLog
+import dedeadend.dterminal.domain.model.TerminalState
+import dedeadend.dterminal.domain.repository.CommandExecutor
+import dedeadend.dterminal.domain.repository.HistoryRepository
+import dedeadend.dterminal.domain.repository.SettingsRepository
+import dedeadend.dterminal.domain.repository.TerminalLogRepository
 import jakarta.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class ShellCommandExecutor @Inject constructor(
-    private val repository: Repository,
-    private val ioDispatcher: CoroutineDispatcher
+    private val historyRepository: HistoryRepository,
+    private val settingsRepository: SettingsRepository,
+    private val terminalLogRepository: TerminalLogRepository,
+    private val dispatchers: AppDispatchers
 ) : CommandExecutor {
     private var process: Process? = null
     override suspend fun execute(command: String, isRoot: Boolean) {
-        withContext(ioDispatcher) {
-            repository.addHistory(History(command))
-            repository.addLog(
+        withContext(dispatchers.io) {
+            historyRepository.addHistory(History(command))
+            terminalLogRepository.addLog(
                 TerminalLog(
                     TerminalState.Info,
                     (if (isRoot) "#: " else "$: ") + command
@@ -35,7 +40,12 @@ class ShellCommandExecutor @Inject constructor(
                     process?.outputStream?.bufferedWriter()?.use { writer ->
                         command.lines().forEach { cmd ->
                             if (cmd.trim().isNotBlank()) {
-                                if (!executedAsCustomCommand(repository, cmd)) {
+                                if (!executedAsCustomCommand(
+                                        settingsRepository,
+                                        terminalLogRepository,
+                                        cmd
+                                    )
+                                ) {
                                     writer.write(cmd + "\n")
                                     writer.flush()
                                 }
@@ -48,12 +58,17 @@ class ShellCommandExecutor @Inject constructor(
                 process?.inputStream?.bufferedReader()?.use { reader ->
                     var line: String?
                     while (reader.readLine().also { line = it } != null) {
-                        repository.addLog(TerminalLog(TerminalState.Success, line!!))
+                        terminalLogRepository.addLog(TerminalLog(TerminalState.Success, line!!))
                     }
                 }
                 process?.waitFor()
             } catch (e: Exception) {
-                repository.addLog(TerminalLog(TerminalState.Error, e.message ?: "Unknown Error"))
+                terminalLogRepository.addLog(
+                    TerminalLog(
+                        TerminalState.Error,
+                        e.message ?: "Unknown Error"
+                    )
+                )
             } finally {
                 process?.let { process ->
                     process.inputStream?.close()
@@ -67,9 +82,9 @@ class ShellCommandExecutor @Inject constructor(
     }
 
     override suspend fun cancel() {
-        withContext(ioDispatcher) {
+        withContext(dispatchers.io) {
             if (process == null) {
-                repository.addLog(
+                terminalLogRepository.addLog(
                     TerminalLog(TerminalState.Error, "There is no active process")
                 )
             }
@@ -86,7 +101,7 @@ class ShellCommandExecutor @Inject constructor(
                 process.inputStream.close()
                 process.outputStream.close()
                 process.errorStream.close()
-                repository.addLog(
+                terminalLogRepository.addLog(
                     TerminalLog(TerminalState.Error, "Process terminated by user")
                 )
             }
@@ -105,7 +120,8 @@ class ShellCommandExecutor @Inject constructor(
     }
 
     private suspend fun executedAsCustomCommand(
-        repository: Repository,
+        settingsRepository: SettingsRepository,
+        terminalLogRepository: TerminalLogRepository,
         command: String
     ): Boolean {
         when (command.split(" ")[0].lowercase().trim()) {
@@ -144,7 +160,7 @@ class ShellCommandExecutor @Inject constructor(
                            ls
                          Then execute both lines at once.
                 """.trimIndent()
-                repository.addLog(TerminalLog(TerminalState.Success, helpText))
+                terminalLogRepository.addLog(TerminalLog(TerminalState.Success, helpText))
                 return true
             }
 
@@ -171,7 +187,7 @@ class ShellCommandExecutor @Inject constructor(
                     
                     -------------------------------------------------
                 """.trimIndent()
-                repository.addLog(TerminalLog(TerminalState.Success, aboutText))
+                terminalLogRepository.addLog(TerminalLog(TerminalState.Success, aboutText))
                 return true
             }
 
@@ -179,15 +195,15 @@ class ShellCommandExecutor @Inject constructor(
                 val parts = command.trim().split("\\s+".toRegex())
                 if (parts.size == 2) {
                     if (parts[1] == "def") {
-                        repository.setLogSuccessFontColor(-1, -1, -1)
-                        repository.addLog(
+                        settingsRepository.setLogSuccessFontColor(-1, -1, -1)
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Success,
                                 "Color set successfully."
                             )
                         )
                     } else {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Usage: color1 [red] [green] [blue]\n" +
@@ -202,15 +218,15 @@ class ShellCommandExecutor @Inject constructor(
                         val green = parts[2].toInt()
                         val blue = parts[3].toInt()
                         if (red in 0..255 && green in 0..255 && blue in 0..255) {
-                            repository.setLogSuccessFontColor(red, green, blue)
-                            repository.addLog(
+                            settingsRepository.setLogSuccessFontColor(red, green, blue)
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Success,
                                     "Color set successfully."
                                 )
                             )
                         } else {
-                            repository.addLog(
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Error,
                                     "Invalid color values.\n" +
@@ -219,7 +235,7 @@ class ShellCommandExecutor @Inject constructor(
                             )
                         }
                     } catch (_: NumberFormatException) {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Usage: color1 [red] [green] [blue]\n" +
@@ -229,7 +245,7 @@ class ShellCommandExecutor @Inject constructor(
                         )
                     }
                 } else {
-                    repository.addLog(
+                    terminalLogRepository.addLog(
                         TerminalLog(
                             TerminalState.Error,
                             "Usage: color1 [red] [green] [blue]\n" +
@@ -245,15 +261,15 @@ class ShellCommandExecutor @Inject constructor(
                 val parts = command.trim().split("\\s+".toRegex())
                 if (parts.size == 2) {
                     if (parts[1] == "def") {
-                        repository.setLogErrorFontColor(-1, -1, -1)
-                        repository.addLog(
+                        settingsRepository.setLogErrorFontColor(-1, -1, -1)
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Success,
                                 "Color set successfully."
                             )
                         )
                     } else {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Usage: color2 [red] [green] [blue]\n" +
@@ -268,15 +284,15 @@ class ShellCommandExecutor @Inject constructor(
                         val green = parts[2].toInt()
                         val blue = parts[3].toInt()
                         if (red in 0..255 && green in 0..255 && blue in 0..255) {
-                            repository.setLogErrorFontColor(red, green, blue)
-                            repository.addLog(
+                            settingsRepository.setLogErrorFontColor(red, green, blue)
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Success,
                                     "Color set successfully."
                                 )
                             )
                         } else {
-                            repository.addLog(
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Error,
                                     "Invalid color values.\n" +
@@ -285,7 +301,7 @@ class ShellCommandExecutor @Inject constructor(
                             )
                         }
                     } catch (_: NumberFormatException) {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Usage: color2 [red] [green] [blue]\n" +
@@ -295,7 +311,7 @@ class ShellCommandExecutor @Inject constructor(
                         )
                     }
                 } else {
-                    repository.addLog(
+                    terminalLogRepository.addLog(
                         TerminalLog(
                             TerminalState.Error,
                             "Usage: color2 [red] [green] [blue]\n" +
@@ -311,15 +327,15 @@ class ShellCommandExecutor @Inject constructor(
                 val parts = command.trim().split("\\s+".toRegex())
                 if (parts.size == 2) {
                     if (parts[1] == "def") {
-                        repository.setLogInfoFontColor(-1, -1, -1)
-                        repository.addLog(
+                        settingsRepository.setLogInfoFontColor(-1, -1, -1)
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Success,
                                 "Color set successfully."
                             )
                         )
                     } else {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Usage: color3 [red] [green] [blue]\n" +
@@ -334,15 +350,15 @@ class ShellCommandExecutor @Inject constructor(
                         val green = parts[2].toInt()
                         val blue = parts[3].toInt()
                         if (red in 0..255 && green in 0..255 && blue in 0..255) {
-                            repository.setLogInfoFontColor(red, green, blue)
-                            repository.addLog(
+                            settingsRepository.setLogInfoFontColor(red, green, blue)
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Success,
                                     "Color set successfully."
                                 )
                             )
                         } else {
-                            repository.addLog(
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Error,
                                     "Invalid color values.\n" +
@@ -351,7 +367,7 @@ class ShellCommandExecutor @Inject constructor(
                             )
                         }
                     } catch (_: NumberFormatException) {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Usage: color3 [red] [green] [blue]\n" +
@@ -361,7 +377,7 @@ class ShellCommandExecutor @Inject constructor(
                         )
                     }
                 } else {
-                    repository.addLog(
+                    terminalLogRepository.addLog(
                         TerminalLog(
                             TerminalState.Error,
                             "Usage: color3 [red] [green] [blue]\n" +
@@ -377,8 +393,8 @@ class ShellCommandExecutor @Inject constructor(
                 val parts = command.trim().split("\\s+".toRegex())
                 if (parts.size == 2) {
                     if (parts[1] == "def") {
-                        repository.setLogFontSize(11)
-                        repository.addLog(
+                        settingsRepository.setLogFontSize(11)
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Success,
                                 "Font size set successfully."
@@ -388,15 +404,15 @@ class ShellCommandExecutor @Inject constructor(
                         try {
                             val fontSize = parts[1].toInt()
                             if (fontSize in 5..25) {
-                                repository.setLogFontSize(fontSize)
-                                repository.addLog(
+                                settingsRepository.setLogFontSize(fontSize)
+                                terminalLogRepository.addLog(
                                     TerminalLog(
                                         TerminalState.Success,
                                         "Font size set successfully."
                                     )
                                 )
                             } else {
-                                repository.addLog(
+                                terminalLogRepository.addLog(
                                     TerminalLog(
                                         TerminalState.Error,
                                         "Invalid font size value.\n" +
@@ -405,7 +421,7 @@ class ShellCommandExecutor @Inject constructor(
                                 )
                             }
                         } catch (_: NumberFormatException) {
-                            repository.addLog(
+                            terminalLogRepository.addLog(
                                 TerminalLog(
                                     TerminalState.Error,
                                     "Invalid font value.\n" +
@@ -415,7 +431,7 @@ class ShellCommandExecutor @Inject constructor(
                         }
                     }
                 } else {
-                    repository.addLog(
+                    terminalLogRepository.addLog(
                         TerminalLog(
                             TerminalState.Error,
                             "Usage: font [size]\n" +
@@ -436,14 +452,24 @@ class ShellCommandExecutor @Inject constructor(
                         val num2 = parts[2].toInt()
                         if (num1 > num2) {
                             val randomNum = (num2..num1).random()
-                            repository.addLog(TerminalLog(TerminalState.Success, ("$randomNum")))
+                            terminalLogRepository.addLog(
+                                TerminalLog(
+                                    TerminalState.Success,
+                                    ("$randomNum")
+                                )
+                            )
 
                         } else {
                             val randomNum = (num1..num2).random()
-                            repository.addLog(TerminalLog(TerminalState.Success, ("$randomNum")))
+                            terminalLogRepository.addLog(
+                                TerminalLog(
+                                    TerminalState.Success,
+                                    ("$randomNum")
+                                )
+                            )
                         }
                     } catch (_: NumberFormatException) {
-                        repository.addLog(
+                        terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Error,
                                 "Invalid input. Please enter valid numbers."
@@ -451,7 +477,7 @@ class ShellCommandExecutor @Inject constructor(
                         )
                     }
                 } else {
-                    repository.addLog(
+                    terminalLogRepository.addLog(
                         TerminalLog(
                             TerminalState.Error,
                             "Usage: random [a] [b]\n" +
@@ -463,7 +489,7 @@ class ShellCommandExecutor @Inject constructor(
             }
 
             "clear", "cls" -> {
-                repository.clearLogs()
+                terminalLogRepository.clearLogs()
                 return true
             }
 
@@ -502,12 +528,12 @@ class ShellCommandExecutor @Inject constructor(
                     Uptime: $uptimeString
                 """.trimIndent()
 
-                repository.addLog(TerminalLog(TerminalState.Success, info))
+                terminalLogRepository.addLog(TerminalLog(TerminalState.Success, info))
                 return true
             }
 
             "sudo" -> {
-                repository.addLog(
+                terminalLogRepository.addLog(
                     TerminalLog(
                         TerminalState.Success,
                         "Nice try! But you have no power here :)\n[Use su or switch to root mode]"

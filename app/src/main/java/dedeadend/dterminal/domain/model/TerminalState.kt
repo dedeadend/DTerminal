@@ -1,4 +1,4 @@
-package dedeadend.dterminal.domain
+package dedeadend.dterminal.domain.model
 
 enum class TerminalState {
     Success,

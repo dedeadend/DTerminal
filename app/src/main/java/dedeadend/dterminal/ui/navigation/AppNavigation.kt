@@ -1,4 +1,4 @@
-package dedeadend.dterminal.navigation
+package dedeadend.dterminal.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

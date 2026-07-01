@@ -78,9 +78,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domain.Script
+import dedeadend.dterminal.domain.model.Script
 import dedeadend.dterminal.domain.UiEvent
-import dedeadend.dterminal.ui.BaseTopBar
+import dedeadend.dterminal.core.BaseTopBar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

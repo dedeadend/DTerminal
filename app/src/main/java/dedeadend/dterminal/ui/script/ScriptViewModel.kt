@@ -6,10 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domain.Script
+import dedeadend.dterminal.core.AppDispatchers
 import dedeadend.dterminal.domain.UiEvent
-import kotlinx.coroutines.CoroutineDispatcher
+import dedeadend.dterminal.domain.model.Script
+import dedeadend.dterminal.domain.repository.ScriptRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
@@ -20,12 +20,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ScriptViewModel @Inject constructor(
-    private val repository: Repository,
-    private val ioDispatcher: CoroutineDispatcher
+    private val scriptRepository: ScriptRepository,
+    private val dispatchers: AppDispatchers
 ) : ViewModel() {
 
-    val scripts = repository.getScripts()
-        .flowOn(ioDispatcher)
+    val scripts = scriptRepository.getScripts()
+        .flowOn(dispatchers.io)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private var scriptsBackup: List<Script>? = null
@@ -48,17 +48,17 @@ class ScriptViewModel @Inject constructor(
     val eventFlow = _eventFlow.receiveAsFlow()
 
     fun deleteScript(scriptCommand: Script) {
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch(dispatchers.io) {
             scriptsBackup = listOf(scriptCommand)
-            repository.deleteScriptWithId(scriptCommand.id)
+            scriptRepository.deleteScriptWithId(scriptCommand.id)
             _eventFlow.send(UiEvent.ShowSnackbar("Script Deleted", "Undo"))
         }
     }
 
     fun undoDeleteScript() {
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch(dispatchers.io) {
             scriptsBackup?.let {
-                repository.addScript(it.last())
+                scriptRepository.addScript(it.last())
                 scriptsBackup = null
             }
         }
@@ -84,8 +84,8 @@ class ScriptViewModel @Inject constructor(
             editingScriptCommandError = "Command cannot be empty"
             return
         }
-        viewModelScope.launch(ioDispatcher) {
-            repository.addScript(
+        viewModelScope.launch(dispatchers.io) {
+            scriptRepository.addScript(
                 Script(
                     editingScriptName,
                     editingScriptCommand,

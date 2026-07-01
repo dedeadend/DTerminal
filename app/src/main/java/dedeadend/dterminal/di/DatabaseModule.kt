@@ -9,12 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dedeadend.dterminal.data.AppDatabase
-import dedeadend.dterminal.data.Repository
-import dedeadend.dterminal.domain.CommandDao
-import dedeadend.dterminal.domain.SystemSettingsDao
-import dedeadend.dterminal.domain.TerminalLogDao
-import kotlinx.coroutines.CoroutineDispatcher
+import dedeadend.dterminal.data.local.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,6 +18,34 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "app_database"
+        ).addCallback(dbCallback).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSystemSettingsDao(database: AppDatabase) = database.systemSettingsDao()
+
+    @Provides
+    @Singleton
+    fun provideTerminalLogDao(database: AppDatabase) = database.terminalLogDao()
+
+    @Provides
+    @Singleton
+    fun provideHistoryDao(database: AppDatabase) = database.historyDao()
+
+    @Provides
+    @Singleton
+    fun provideScriptDao(database: AppDatabase) = database.scriptDao()
+
+
     private val dbCallback = object : RoomDatabase.Callback() {
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
@@ -38,37 +61,4 @@ object DatabaseModule {
             db.execSQL("INSERT INTO system_settings (id, isFirstBoot, logSuccessFontColor, logErrorFontColor, logInfoFontColor, logFontSize) VALUES (1, 1, -1, -1, -1, 11)")
         }
     }
-
-    @Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "app_database"
-        ).addCallback(dbCallback).build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideCommandDao(database: AppDatabase) = database.commandDao()
-
-    @Provides
-    @Singleton
-    fun provideTerminalLogDao(database: AppDatabase) = database.terminalLogDao()
-
-    @Provides
-    @Singleton
-    fun provideSystemSettingsDao(database: AppDatabase) = database.systemSettingsDao()
-
-
-    @Provides
-    @Singleton
-    fun provideRepository(
-        commandDao: CommandDao,
-        terminalLogDao: TerminalLogDao,
-        systemSettings: SystemSettingsDao,
-        ioDispatcher: CoroutineDispatcher
-    ) = Repository(commandDao, terminalLogDao, systemSettings, ioDispatcher)
-
 }

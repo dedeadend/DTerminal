@@ -55,10 +55,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dedeadend.dterminal.R
-import dedeadend.dterminal.domain.SystemSettings
-import dedeadend.dterminal.domain.TerminalLog
-import dedeadend.dterminal.domain.TerminalState
-import dedeadend.dterminal.ui.BaseTopBar
+import dedeadend.dterminal.domain.model.Settings
+import dedeadend.dterminal.domain.model.TerminalLog
+import dedeadend.dterminal.domain.model.TerminalState
+import dedeadend.dterminal.core.BaseTopBar
 import dedeadend.dterminal.ui.theme.ErrorTextColor
 import dedeadend.dterminal.ui.theme.InfoTextColor
 import kotlinx.coroutines.flow.Flow
@@ -72,7 +72,7 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
     val scrollState = rememberLazyListState()
-    val systemSettings by viewModel.systemSettings.collectAsStateWithLifecycle()
+    val systemSettings by viewModel.settings.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -178,36 +178,36 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
 }
 
 @Composable
-private fun OutputItem(output: TerminalLog, systemSettings: SystemSettings) {
+private fun OutputItem(output: TerminalLog, settings: Settings) {
     SelectionContainer {
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = terminalLog2String(output),
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                fontSize = systemSettings.logFontSize.sp,
-                lineHeight = (systemSettings.logFontSize + 4).sp,
+                fontSize = settings.logFontSize.sp,
+                lineHeight = (settings.logFontSize + 4).sp,
                 textAlign = TextAlign.Left,
                 color = when (output.state) {
                     TerminalState.Info -> {
-                        if (systemSettings.logInfoFontColor == -1)
+                        if (settings.logInfoFontColor == -1)
                             InfoTextColor
                         else
-                            Color(systemSettings.logInfoFontColor)
+                            Color(settings.logInfoFontColor)
                     }
 
                     TerminalState.Error -> {
-                        if (systemSettings.logErrorFontColor == -1)
+                        if (settings.logErrorFontColor == -1)
                             ErrorTextColor
                         else
-                            Color(systemSettings.logErrorFontColor)
+                            Color(settings.logErrorFontColor)
                     }
 
                     else -> {
-                        if (systemSettings.logSuccessFontColor == -1)
+                        if (settings.logSuccessFontColor == -1)
                             MaterialTheme.colorScheme.onSurface
                         else
-                            Color(systemSettings.logSuccessFontColor)
+                            Color(settings.logSuccessFontColor)
                     }
                 }
             )
