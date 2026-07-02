@@ -30,9 +30,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -360,38 +362,42 @@ fun EditSheetContent(viewModel: ScriptViewModel, uiState: ScriptUiState) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .navigationBarsPadding()
+            .navigationBarsPadding(),
     ) {
-        Text("Script Options", style = MaterialTheme.typography.titleMedium)
-
-        OutlinedTextField(
-            value = uiState.editingScriptName,
-            onValueChange = { viewModel.onEvent(ScriptUiEvent.OnEditingScriptNameChange(it)) },
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            label = { Text("Name") },
-            isError = uiState.hasEditingScriptNameError,
-            supportingText = {
-                Text(text = uiState.editingScriptNameError)
-            }
-        )
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text("Script Options", style = MaterialTheme.typography.titleMedium)
 
-        OutlinedTextField(
-            value = uiState.editingScriptCommand,
-            onValueChange = { viewModel.onEvent(ScriptUiEvent.OnEditingScriptCommandChange(it)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            label = { Text("Command") },
-            isError = uiState.hasEditingScriptCommandError,
-            supportingText = {
-                Text(text = uiState.editingScriptCommandError)
-            }
-        )
+            OutlinedTextField(
+                value = uiState.editingScriptName,
+                onValueChange = { viewModel.onEvent(ScriptUiEvent.OnEditingScriptNameChange(it)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                label = { Text("Name") },
+                singleLine = true,
+                isError = uiState.hasEditingScriptNameError,
+                supportingText = { Text(text = uiState.editingScriptNameError) }
+            )
 
+            OutlinedTextField(
+                value = uiState.editingScriptCommand,
+                onValueChange = { viewModel.onEvent(ScriptUiEvent.OnEditingScriptCommandChange(it)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                label = { Text("Command") },
+                isError = uiState.hasEditingScriptCommandError,
+                supportingText = { Text(text = uiState.editingScriptCommandError) }
+            )
+        }
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
             horizontalArrangement = Arrangement.End
         ) {
             TextButton(onClick = { viewModel.onEvent(ScriptUiEvent.CancelEdit) }) { Text("Cancel") }
