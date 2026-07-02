@@ -107,8 +107,9 @@ fun Terminal(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(16.dp, 0.dp),
+                    .padding(16.dp, 0.dp)
+                    .weight(1f),
+                colors = CardDefaults.cardColors( containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 LazyColumn(
                     state = scrollState,
