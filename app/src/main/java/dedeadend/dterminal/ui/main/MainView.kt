@@ -12,16 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dedeadend.dterminal.ui.navigation.AppDestinations
 import dedeadend.dterminal.ui.navigation.AppNavigation
 
 @Composable
-fun Main(
-    viewModel: MainViewModel = hiltViewModel()
-) {
+fun Main() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
@@ -52,6 +49,6 @@ fun Main(
             }
         }
     ) {
-        AppNavigation(navController, viewModel)
+        AppNavigation(navController)
     }
 }

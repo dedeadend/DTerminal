@@ -4,14 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.core.AppDispatchers
-import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.domain.model.History
 import dedeadend.dterminal.domain.repository.HistoryRepository
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,38 +21,51 @@ class HistoryViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val dispatchers: AppDispatchers
 ) : ViewModel() {
-    val history = historyRepository.getHistory()
-        .flowOn(dispatchers.io)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    private var historyBackup: List<History>? = null
+    private val _uiState = MutableStateFlow(HistoryUiState())
+    val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
-    private var _eventFlow = Channel<UiEvent>(Channel.RENDEZVOUS)
-    val eventFlow = _eventFlow.receiveAsFlow()
+    private val _uiEffect = Channel<HistoryUiEffect>(Channel.BUFFERED)
+    val uiEffect = _uiEffect.receiveAsFlow()
 
-
-    fun clearHistory() {
-        viewModelScope.launch(dispatchers.io) {
-            if (history.value.isNotEmpty()) {
-                historyBackup = history.value.toList()
-                historyRepository.clearHistory()
-                _eventFlow.send(UiEvent.ShowSnackbar("History Cleared", "Undo"))
+    init {
+        viewModelScope.launch {
+            historyRepository.getHistory().flowOn(dispatchers.io).collect { history ->
+                _uiState.update { it.copy(history = history, isLoading = false) }
             }
         }
     }
 
-    fun deleteHistoryItem(history: History) {
-        viewModelScope.launch(dispatchers.io) {
-            historyBackup = listOf(history)
-            historyRepository.deleteHistoryWithId(history.id)
-            _eventFlow.send(UiEvent.ShowSnackbar("History Item Deleted", "Undo"))
+    fun onEvent(event: HistoryUiEvent) {
+        when (event) {
+            is HistoryUiEvent.ClearHistory -> clearHistory()
+            is HistoryUiEvent.DeleteHistoryItem -> deleteHistoryItem(event.history)
+            is HistoryUiEvent.UndoDeleteHistoryItems -> undoDeleteHistoryItems()
         }
     }
 
-    fun undoDeleteHistoryItems() {
+    private fun clearHistory() {
+        viewModelScope.launch(dispatchers.io) {
+            if (uiState.value.history.isNotEmpty()) {
+                _uiState.update { it.copy(historyBackup = it.history.toList()) }
+                historyRepository.clearHistory()
+                _uiEffect.send(HistoryUiEffect.ShowSnackbar("History Cleared", "Undo"))
+            }
+        }
+    }
+
+    private fun deleteHistoryItem(history: History) {
+        viewModelScope.launch(dispatchers.io) {
+            _uiState.update { it.copy(historyBackup = it.history.toList()) }
+            historyRepository.deleteHistoryWithId(history.id)
+            _uiEffect.send(HistoryUiEffect.ShowSnackbar("History Item Deleted", "Undo"))
+        }
+    }
+
+    private fun undoDeleteHistoryItems() {
         viewModelScope.launch {
-            historyBackup?.let {
-                historyRepository.restoreHistory(it)
-                historyBackup = null
+            if (_uiState.value.historyBackup.isNotEmpty()) {
+                historyRepository.restoreHistory(_uiState.value.historyBackup)
+                _uiState.update { it.copy(historyBackup = emptyList()) }
             }
         }
     }

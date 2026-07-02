@@ -1,20 +1,17 @@
 package dedeadend.dterminal.ui.script
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.core.AppDispatchers
-import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.domain.model.Script
 import dedeadend.dterminal.domain.repository.ScriptRepository
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,98 +20,126 @@ class ScriptViewModel @Inject constructor(
     private val scriptRepository: ScriptRepository,
     private val dispatchers: AppDispatchers
 ) : ViewModel() {
+    private val _uiState = MutableStateFlow(ScriptUiState())
+    val uiState = _uiState.asStateFlow()
 
-    val scripts = scriptRepository.getScripts()
-        .flowOn(dispatchers.io)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    private val _uiEffect = Channel<ScriptUiEffect>(Channel.BUFFERED)
+    val uiEffect = _uiEffect.receiveAsFlow()
 
-    private var scriptsBackup: List<Script>? = null
-
-    var isEditing by mutableStateOf(false)
-        private set
-    var editingScriptName by mutableStateOf("")
-        private set
-    var editingScriptCommand by mutableStateOf("")
-        private set
-    private var editingScriptId = -1
-
-    var editingScriptNameError by mutableStateOf("")
-        private set
-
-    var editingScriptCommandError by mutableStateOf("")
-        private set
-
-    private var _eventFlow = Channel<UiEvent>(Channel.RENDEZVOUS)
-    val eventFlow = _eventFlow.receiveAsFlow()
-
-    fun deleteScript(scriptCommand: Script) {
-        viewModelScope.launch(dispatchers.io) {
-            scriptsBackup = listOf(scriptCommand)
-            scriptRepository.deleteScriptWithId(scriptCommand.id)
-            _eventFlow.send(UiEvent.ShowSnackbar("Script Deleted", "Undo"))
-        }
-    }
-
-    fun undoDeleteScript() {
-        viewModelScope.launch(dispatchers.io) {
-            scriptsBackup?.let {
-                scriptRepository.addScript(it.last())
-                scriptsBackup = null
+    init {
+        viewModelScope.launch {
+            scriptRepository.getScripts().flowOn(dispatchers.io).collect { scripts ->
+                _uiState.update { it.copy(scripts = scripts, isLoading = false) }
             }
         }
     }
 
-    fun addNewScript() {
+    fun onEvent(event: ScriptUiEvent) {
+        when (event) {
+            is ScriptUiEvent.DeleteScript -> deleteScript(event.scriptCommand)
+            is ScriptUiEvent.AddNewScript -> addNewScript()
+            is ScriptUiEvent.UndoDeleteScript -> undoDeleteScript()
+            is ScriptUiEvent.StartEdit -> startEdit(event.script)
+            is ScriptUiEvent.CancelEdit -> cancelEdit()
+            is ScriptUiEvent.OnEditingScriptCommandChange -> onEditingScriptCommandChange(event.newCommand)
+            is ScriptUiEvent.OnEditingScriptNameChange -> onEditingScriptNameChange(event.newName)
+            is ScriptUiEvent.SaveEdit -> saveEdit()
+        }
+    }
+
+    private fun deleteScript(scriptCommand: Script) {
+        viewModelScope.launch(dispatchers.io) {
+            _uiState.update { it.copy(scriptsBackup = listOf(scriptCommand)) }
+            scriptRepository.deleteScriptWithId(scriptCommand.id)
+            _uiEffect.send(ScriptUiEffect.ShowSnackbar("Script Deleted", "Undo"))
+        }
+    }
+
+    private fun undoDeleteScript() {
+        viewModelScope.launch(dispatchers.io) {
+            if (_uiState.value.scriptsBackup.isNotEmpty()) {
+                scriptRepository.addScript(_uiState.value.scriptsBackup.last())
+                _uiState.update { it.copy(scriptsBackup = emptyList()) }
+            }
+        }
+    }
+
+    private fun addNewScript() {
         startEdit(Script("", ""))
     }
 
-    fun startEdit(script: Script) {
-        editingScriptName = script.name
-        editingScriptCommand = script.command
-        editingScriptId = script.id
-        isEditing = true
+    private fun startEdit(script: Script) {
+        _uiState.update {
+            it.copy(
+                editingScriptName = script.name,
+                editingScriptCommand = script.command,
+                editingScriptId = script.id,
+                isEditing = true
+            )
+        }
     }
 
-    fun saveEdit() {
-        if (editingScriptName.trim().isEmpty()) {
-            editingScriptNameError = "Name cannot be empty"
-            return
+    private fun saveEdit() {
+        var isValid = true
+        if (_uiState.value.editingScriptName.isBlank()) {
+            _uiState.update { it.copy(editingScriptNameError = "Name cannot be empty") }
+            isValid = false
         }
-        if (editingScriptCommand.trim().isEmpty()) {
-            editingScriptCommandError = "Command cannot be empty"
-            return
+        if (_uiState.value.editingScriptCommand.isBlank()) {
+            _uiState.update { it.copy(editingScriptCommandError = "Command cannot be empty") }
+            isValid = false
         }
+        if (!isValid)
+            return
         viewModelScope.launch(dispatchers.io) {
             scriptRepository.addScript(
                 Script(
-                    editingScriptName,
-                    editingScriptCommand,
-                    editingScriptId
+                    _uiState.value.editingScriptName,
+                    _uiState.value.editingScriptCommand,
+                    _uiState.value.editingScriptId
                 )
             )
-            editingScriptNameError = ""
-            editingScriptCommandError = ""
-            editingScriptId = -1
-            isEditing = false
+            _uiState.update {
+                it.copy(
+                    editingScriptNameError = "",
+                    editingScriptCommandError = "",
+                    editingScriptId = 0,
+                    isEditing = false
+                )
+            }
+            _uiEffect.send(ScriptUiEffect.ShowSnackbar("Script Saved Successfully"))
         }
     }
 
-    fun cancelEdit() {
-        editingScriptNameError = ""
-        editingScriptCommandError = ""
-        editingScriptName = ""
-        editingScriptCommand = ""
-        editingScriptId = -1
-        isEditing = false
+    private fun cancelEdit() {
+        _uiState.update {
+            it.copy(
+                editingScriptNameError = "",
+                editingScriptCommandError = "",
+                editingScriptName = "",
+                editingScriptCommand = "",
+                editingScriptId = 0,
+                isEditing = false
+            )
+        }
+
     }
 
-    fun onEditingScriptNameChange(newName: String) {
-        editingScriptName = newName
-        editingScriptNameError = ""
+    private fun onEditingScriptNameChange(newName: String) {
+        _uiState.update {
+            it.copy(
+                editingScriptName = newName,
+                editingScriptNameError = ""
+            )
+        }
     }
 
-    fun onEditingScriptCommandChange(newCommand: String) {
-        editingScriptCommand = newCommand
-        editingScriptCommandError = ""
+    private fun onEditingScriptCommandChange(newCommand: String) {
+        _uiState.update {
+            it.copy(
+                editingScriptCommand = newCommand,
+                editingScriptCommandError = ""
+            )
+        }
     }
 }

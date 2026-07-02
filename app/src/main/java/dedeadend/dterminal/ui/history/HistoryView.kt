@@ -49,25 +49,22 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domain.model.History
-import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.core.BaseTopBar
+import dedeadend.dterminal.domain.model.History
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -75,49 +72,45 @@ fun History(
     viewModel: HistoryViewModel = hiltViewModel(),
     onHistoryItemExecuteClick: (String) -> Unit
 ) {
-    val scrollState = rememberLazyListState()
-    val history by viewModel.history.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
     var snackbarJob: Job? = null
+
     LaunchedEffect(Unit) {
-        viewModel.eventFlow.collect { event ->
-            if (event is UiEvent.ShowSnackbar) {
-                snackbarJob?.cancel()
-                snackbarJob = snackbarScope.launch {
-                    val result = snackbarHostState.showSnackbar(
-                        message = event.message,
-                        actionLabel = event.actionLabel,
-                        duration = SnackbarDuration.Short,
-                        withDismissAction = true
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.undoDeleteHistoryItems()
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is HistoryUiEffect.ShowSnackbar -> {
+                    snackbarJob?.cancel()
+                    snackbarJob = snackbarScope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = effect.message,
+                            actionLabel = effect.actionLabel,
+                            duration = SnackbarDuration.Short,
+                            withDismissAction = true
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.onEvent(HistoryUiEvent.UndoDeleteHistoryItems)
+                        }
                     }
                 }
             }
         }
     }
 
-
-    var showIsEmptyIcon by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(500)
-        showIsEmptyIcon = true
-    }
-
     Scaffold(
-        topBar = { HistoryTopBar(onClearHistoryClick = { viewModel.clearHistory() }) },
+        topBar = { HistoryTopBar(onClearHistoryClick = { viewModel.onEvent(HistoryUiEvent.ClearHistory) }) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedVisibility(
-                visible = history.isEmpty() && showIsEmptyIcon,
+                visible = uiState.showEmptyState,
                 enter = fadeIn(
-                    animationSpec = tween(durationMillis = 1000)
+                    animationSpec = tween(durationMillis = 1000, delayMillis = 500),
+                    initialAlpha = 0.0f
                 ) + scaleIn(
-                    animationSpec = tween(durationMillis = 1000),
+                    animationSpec = tween(durationMillis = 1000, delayMillis = 500),
                     initialScale = 0.5f
                 ),
                 exit = fadeOut(),
@@ -127,17 +120,20 @@ fun History(
                     Icon(
                         imageVector = Icons.Default.History,
                         contentDescription = "NoHistoryIcon",
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(96.dp)
                     )
                     Text(
-                        "\nNo History Yet",
-                        style = MaterialTheme.typography.titleMedium
+                        "No History Yet",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontStyle = FontStyle.Italic
+                        )
                     )
                 }
             }
         }
         LazyColumn(
-            state = scrollState,
+            state = rememberLazyListState(),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
@@ -145,7 +141,7 @@ fun History(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             reverseLayout = true
         ) {
-            items(items = history, key = { item -> item.id }) { item ->
+            items(items = uiState.history, key = { item -> item.id }) { item ->
                 val animatedProgress = remember { Animatable(0f) }
                 LaunchedEffect(Unit) {
                     animatedProgress.animateTo(
@@ -172,7 +168,7 @@ fun History(
                     HistoryItem(
                         history = item,
                         onExecuteClick = { onHistoryItemExecuteClick(item.command) },
-                        onDeleteSwipe = { viewModel.deleteHistoryItem(item) }
+                        onDeleteSwipe = { viewModel.onEvent(HistoryUiEvent.DeleteHistoryItem(item)) }
                     )
                 }
             }
@@ -225,7 +221,7 @@ private fun HistoryItem(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(8.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(8.dp)
@@ -262,7 +258,7 @@ private fun HistoryItem(
                         Box(
                             modifier = Modifier
                                 .padding(8.dp)
-                                .size(48.dp)
+                                .size(42.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable(enabled = true) {

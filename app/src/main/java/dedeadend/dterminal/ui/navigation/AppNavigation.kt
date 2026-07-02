@@ -1,40 +1,41 @@
 package dedeadend.dterminal.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.ui.history.History
-import dedeadend.dterminal.ui.main.MainViewModel
 import dedeadend.dterminal.ui.script.Script
 import dedeadend.dterminal.ui.terminal.Terminal
 
 @Composable
-fun AppNavigation(navController: NavHostController, mainVM: MainViewModel) {
-    LaunchedEffect(Unit) {
-        mainVM.navigationEvent.collect { event ->
-            if (event is UiEvent.Navigate)
-                navController.navigate(event.route) {
-                    popUpTo(AppDestinations.TERMINAL.name) {saveState = true}
+fun AppNavigation(
+    navController: NavHostController,
+    appViewModel: AppViewModel = hiltViewModel()
+) {
+    NavHost(navController = navController, startDestination = AppDestinations.TERMINAL.name) {
+        composable(AppDestinations.TERMINAL.name) {
+            Terminal(terminalCommandChannel = appViewModel.terminalCommandChannel)
+        }
+        composable(AppDestinations.HISTORY.name) {
+            History(onHistoryItemExecuteClick = { command ->
+                appViewModel.onItemExecuteClicked(command)
+                navController.navigate(AppDestinations.TERMINAL.name) {
+                    popUpTo(AppDestinations.TERMINAL.name) { saveState = true }
                     launchSingleTop = true
                     restoreState = true
                 }
-        }
-    }
-    NavHost(navController = navController, startDestination = AppDestinations.TERMINAL.name) {
-        composable(AppDestinations.TERMINAL.name) {
-            Terminal(terminalCommand = mainVM.terminalCommand)
-        }
-        composable(AppDestinations.HISTORY.name,) {
-            History(onHistoryItemExecuteClick = { command ->
-                mainVM.onItemExecuteClicked(command)
             })
         }
         composable(AppDestinations.Scripts.name) {
-            Script(onSciptItemExecuteClick = { command ->
-                mainVM.onItemExecuteClicked(command)
+            Script(onScriptItemExecuteClick = { command ->
+                appViewModel.onItemExecuteClicked(command)
+                navController.navigate(AppDestinations.TERMINAL.name) {
+                    popUpTo(AppDestinations.TERMINAL.name) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
             })
         }
     }

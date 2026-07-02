@@ -8,7 +8,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,72 +64,65 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dedeadend.dterminal.domain.model.Script
-import dedeadend.dterminal.domain.UiEvent
 import dedeadend.dterminal.core.BaseTopBar
+import dedeadend.dterminal.domain.model.Script
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Script(
     viewModel: ScriptViewModel = hiltViewModel(),
-    onSciptItemExecuteClick: (String) -> Unit
+    onScriptItemExecuteClick: (String) -> Unit
 ) {
-    val scrollState = rememberLazyListState()
-    val scripts by viewModel.scripts.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
     var snackbarJob: Job? = null
     LaunchedEffect(Unit) {
-        viewModel.eventFlow.collect { event ->
-            if (event is UiEvent.ShowSnackbar) {
-                snackbarJob?.cancel()
-                snackbarJob = snackbarScope.launch {
-                    val result = snackbarHostState.showSnackbar(
-                        message = event.message,
-                        actionLabel = event.actionLabel,
-                        duration = SnackbarDuration.Short,
-                        withDismissAction = true
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.undoDeleteScript()
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is ScriptUiEffect.ShowSnackbar -> {
+                    snackbarJob?.cancel()
+                    snackbarJob = snackbarScope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = effect.message,
+                            actionLabel = effect.actionLabel,
+                            duration = SnackbarDuration.Short,
+                            withDismissAction = true
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.onEvent(ScriptUiEvent.UndoDeleteScript)
+                        }
                     }
                 }
             }
         }
     }
 
-    var showIsEmptyIcon by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(500)
-        showIsEmptyIcon = true
-    }
-
-    var previousIndex by remember { mutableIntStateOf(0) }
+    val scrollState = rememberLazyListState()
     val isScrollingUp by remember {
+        var previousIndex = 0
         derivedStateOf {
-            scrollState.firstVisibleItemIndex == 0 || previousIndex > scrollState.firstVisibleItemIndex
-                .also {
-                    previousIndex = scrollState.firstVisibleItemIndex
-                }
+            val currentIndex = scrollState.firstVisibleItemIndex
+            val scrollingUp = currentIndex == 0 || currentIndex < previousIndex
+
+            previousIndex = currentIndex
+            scrollingUp
         }
     }
 
@@ -138,11 +132,11 @@ fun Script(
         floatingActionButton = {
             AnimatedVisibility(
                 visible = isScrollingUp,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
+                enter = slideInVertically(initialOffsetY = { it + 50 }),
+                exit = slideOutVertically(targetOffsetY = { it + 50 })
             ) {
                 FloatingActionButton(
-                    onClick = { viewModel.addNewScript() },
+                    onClick = { viewModel.onEvent(ScriptUiEvent.AddNewScript) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape
@@ -159,11 +153,12 @@ fun Script(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             AnimatedVisibility(
-                visible = scripts.isEmpty() && showIsEmptyIcon,
+                visible = uiState.showEmptyState,
                 enter = fadeIn(
-                    animationSpec = tween(durationMillis = 1000)
+                    animationSpec = tween(durationMillis = 1000, delayMillis = 500),
+                    initialAlpha = 0.0f
                 ) + scaleIn(
-                    animationSpec = tween(durationMillis = 1000),
+                    animationSpec = tween(durationMillis = 1000, delayMillis = 500),
                     initialScale = 0.5f
                 ),
                 exit = fadeOut(),
@@ -176,8 +171,11 @@ fun Script(
                         modifier = Modifier.size(100.dp)
                     )
                     Text(
-                        text = "\nUse + button to add a script",
-                        style = MaterialTheme.typography.titleMedium
+                        text = "Use + button to add a script",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontStyle = FontStyle.Italic
+                        )
                     )
                 }
             }
@@ -190,7 +188,7 @@ fun Script(
             contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items = scripts, key = { item -> item.id }) { item ->
+            items(items = uiState.scripts, key = { item -> item.id }) { item ->
                 val animatedProgress = remember { Animatable(0f) }
                 LaunchedEffect(Unit) {
                     animatedProgress.animateTo(
@@ -216,19 +214,19 @@ fun Script(
                 ) {
                     ScriptItem(
                         script = item,
-                        onExecuteClick = { onSciptItemExecuteClick(item.command) },
-                        onEditClick = { viewModel.startEdit(item) },
-                        onDeleteSwipe = { viewModel.deleteScript(item) }
+                        onExecuteClick = { onScriptItemExecuteClick(item.command) },
+                        onEditClick = { viewModel.onEvent(ScriptUiEvent.StartEdit(item)) },
+                        onDeleteSwipe = { viewModel.onEvent(ScriptUiEvent.DeleteScript(item)) }
                     )
                 }
             }
         }
-        if (viewModel.isEditing) {
+        if (uiState.isEditing) {
             ModalBottomSheet(
-                onDismissRequest = { viewModel.cancelEdit() },
+                onDismissRequest = { viewModel.onEvent(ScriptUiEvent.CancelEdit) },
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             ) {
-                EditSheetContent(viewModel)
+                EditSheetContent(viewModel, uiState)
             }
         }
     }
@@ -317,7 +315,7 @@ private fun ScriptItem(
                         Box(
                             modifier = Modifier
                                 .padding(8.dp)
-                                .size(48.dp)
+                                .size(42.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable(enabled = true) { onEditClick() },
@@ -332,7 +330,7 @@ private fun ScriptItem(
                         Box(
                             modifier = Modifier
                                 .padding(8.dp)
-                                .size(48.dp)
+                                .size(42.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable(enabled = true) { onExecuteClick() },
@@ -357,7 +355,7 @@ private fun ScriptTopBar() {
 }
 
 @Composable
-fun EditSheetContent(viewModel: ScriptViewModel) {
+fun EditSheetContent(viewModel: ScriptViewModel, uiState: ScriptUiState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -367,28 +365,28 @@ fun EditSheetContent(viewModel: ScriptViewModel) {
         Text("Script Options", style = MaterialTheme.typography.titleMedium)
 
         OutlinedTextField(
-            value = viewModel.editingScriptName,
-            onValueChange = { viewModel.onEditingScriptNameChange(it) },
+            value = uiState.editingScriptName,
+            onValueChange = { viewModel.onEvent(ScriptUiEvent.OnEditingScriptNameChange(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
             label = { Text("Name") },
-            isError = viewModel.editingScriptNameError.isNotEmpty(),
+            isError = uiState.hasEditingScriptNameError,
             supportingText = {
-                Text(text = viewModel.editingScriptNameError)
+                Text(text = uiState.editingScriptNameError)
             }
         )
 
         OutlinedTextField(
-            value = viewModel.editingScriptCommand,
-            onValueChange = { viewModel.onEditingScriptCommandChange(it) },
+            value = uiState.editingScriptCommand,
+            onValueChange = { viewModel.onEvent(ScriptUiEvent.OnEditingScriptCommandChange(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
             label = { Text("Command") },
-            isError = viewModel.editingScriptCommandError.isNotEmpty(),
+            isError = uiState.hasEditingScriptCommandError,
             supportingText = {
-                Text(text = viewModel.editingScriptCommandError)
+                Text(text = uiState.editingScriptCommandError)
             }
         )
 
@@ -396,9 +394,9 @@ fun EditSheetContent(viewModel: ScriptViewModel) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = { viewModel.cancelEdit() }) { Text("Cancel") }
+            TextButton(onClick = { viewModel.onEvent(ScriptUiEvent.CancelEdit) }) { Text("Cancel") }
             Spacer(Modifier.width(8.dp))
-            Button(onClick = { viewModel.saveEdit() }) { Text("Save") }
+            Button(onClick = { viewModel.onEvent(ScriptUiEvent.SaveEdit) }) { Text("Save") }
         }
     }
 }

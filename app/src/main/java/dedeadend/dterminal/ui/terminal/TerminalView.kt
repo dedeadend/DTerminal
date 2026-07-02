@@ -55,10 +55,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dedeadend.dterminal.R
+import dedeadend.dterminal.core.BaseTopBar
 import dedeadend.dterminal.domain.model.Settings
 import dedeadend.dterminal.domain.model.TerminalLog
 import dedeadend.dterminal.domain.model.TerminalState
-import dedeadend.dterminal.core.BaseTopBar
 import dedeadend.dterminal.ui.theme.ErrorTextColor
 import dedeadend.dterminal.ui.theme.InfoTextColor
 import kotlinx.coroutines.flow.Flow
@@ -67,23 +67,28 @@ import kotlinx.coroutines.yield
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Flow<String>) {
+fun Terminal(
+    viewModel: TerminalViewModel = hiltViewModel(),
+    terminalCommandChannel: Flow<String>
+) {
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
+
     val scrollState = rememberLazyListState()
-    val systemSettings by viewModel.settings.collectAsStateWithLifecycle()
-    val logs by viewModel.logs.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        terminalCommand.collect { command ->
-            viewModel.onCommandChange(command)
-            viewModel.execute()
+        terminalCommandChannel.collect { command ->
+            viewModel.onEvent(TerminalUiEvent.OnCommandChange(command))
+            viewModel.onEvent(TerminalUiEvent.Execute)
         }
     }
 
-    LaunchedEffect(logs) {
-        if (!logs.isEmpty()) {
+    LaunchedEffect(uiState.logs) {
+        if (uiState.canScroll) {
             yield()
             scrollState.animateScrollToItem(0)
         }
@@ -91,7 +96,7 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
 
     Scaffold(
         topBar = {
-            TerminalTopBar(viewModel)
+            TerminalTopBar(viewModel, uiState)
         }
     ) { paddingValues ->
         Column(
@@ -113,10 +118,10 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                     reverseLayout = true
                 ) {
                     items(
-                        items = logs,
+                        items = uiState.logs,
                         key = { item -> item.id },
                         contentType = { item -> item.state }) { item ->
-                        OutputItem(item, systemSettings)
+                        OutputItem(item, uiState.settings)
                     }
                 }
             }
@@ -136,12 +141,12 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                 ) {
                     TextField(
                         modifier = Modifier.weight(1f),
-                        value = viewModel.command,
-                        onValueChange = { viewModel.onCommandChange(it) },
+                        value = uiState.command,
+                        onValueChange = { viewModel.onEvent(TerminalUiEvent.OnCommandChange(it)) },
                         placeholder = {
                             Text(
                                 text = "Enter "
-                                        + (if (viewModel.isRoot) "#" else "$")
+                                        + (if (uiState.isRoot) "#" else "$")
                                         + " commands..."
                             )
                         },
@@ -153,11 +158,11 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
                             .size(48.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary)
-                            .clickable(enabled = viewModel.state != TerminalState.Running) {
-                                viewModel.execute()
+                            .clickable(enabled = uiState.executionState != TerminalState.Running) {
+                                viewModel.onEvent(TerminalUiEvent.Execute)
                             }, contentAlignment = Alignment.Center
                     ) {
-                        if (viewModel.state == TerminalState.Running) {
+                        if (uiState.executionState == TerminalState.Running) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -178,17 +183,20 @@ fun Terminal(viewModel: TerminalViewModel = hiltViewModel(), terminalCommand: Fl
 }
 
 @Composable
-private fun OutputItem(output: TerminalLog, settings: Settings) {
+private fun OutputItem(terminalLog: TerminalLog, settings: Settings) {
     SelectionContainer {
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = terminalLog2String(output),
+            text = if (terminalLog.state == TerminalState.Info)
+                "\n\n\n" + terminalLog.date + "\n" + terminalLog.message + "\n"
+            else
+                terminalLog.message,
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
                 fontSize = settings.logFontSize.sp,
                 lineHeight = (settings.logFontSize + 4).sp,
                 textAlign = TextAlign.Left,
-                color = when (output.state) {
+                color = when (terminalLog.state) {
                     TerminalState.Info -> {
                         if (settings.logInfoFontColor == -1)
                             InfoTextColor
@@ -216,13 +224,16 @@ private fun OutputItem(output: TerminalLog, settings: Settings) {
 }
 
 @Composable
-private fun TerminalTopBar(viewmodel: TerminalViewModel) {
+private fun TerminalTopBar(
+    viewmodel: TerminalViewModel,
+    uiState: TerminalUiState
+) {
     val uriHandler = LocalUriHandler.current
     BaseTopBar(actions = {
         Box(
             modifier = Modifier.padding(0.dp, 24.dp, 0.dp, 0.dp)
         ) {
-            IconButton(onClick = { viewmodel.toggleToolsMenu(true) })
+            IconButton(onClick = { viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(true)) })
             {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
@@ -232,14 +243,14 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel) {
             }
             DropdownMenu(
 
-                expanded = viewmodel.toolsMenu,
-                onDismissRequest = { viewmodel.toggleToolsMenu(false) },
+                expanded = uiState.isToolsMenuOpen,
+                onDismissRequest = { viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(false)) },
                 offset = DpOffset(0.dp, 16.dp)
             ) {
                 DropdownMenuItem(
                     text = { Text("Github") },
                     onClick = {
-                        viewmodel.toggleToolsMenu(false)
+                        viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(false))
                         uriHandler.openUri("https://github.com/dedeadend/dterminal")
                     },
                     leadingIcon = {
@@ -253,8 +264,8 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel) {
                 DropdownMenuItem(
                     text = { Text("Clear output") },
                     onClick = {
-                        viewmodel.toggleToolsMenu(false)
-                        viewmodel.clearOutput()
+                        viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(false))
+                        viewmodel.onEvent(TerminalUiEvent.ClearOutput)
                     },
                     leadingIcon = {
                         Icon(
@@ -267,8 +278,8 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel) {
                 DropdownMenuItem(
                     text = { Text("Terminate process") },
                     onClick = {
-                        viewmodel.toggleToolsMenu(false)
-                        viewmodel.terminate()
+                        viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(false))
+                        viewmodel.onEvent(TerminalUiEvent.Terminate)
                     },
                     leadingIcon = {
                         Icon(
@@ -279,10 +290,10 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel) {
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(if (viewmodel.isRoot) "Switch to Shell mode" else "Switch to Root mode") },
+                    text = { Text(if (uiState.isRoot) "Switch to Shell mode" else "Switch to Root mode") },
                     onClick = {
-                        viewmodel.toggleToolsMenu(false)
-                        viewmodel.toggleRoot()
+                        viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(false))
+                        viewmodel.onEvent(TerminalUiEvent.ToggleRoot)
                     },
                     leadingIcon = {
                         Icon(
@@ -296,14 +307,3 @@ private fun TerminalTopBar(viewmodel: TerminalViewModel) {
         }
     })
 }
-
-
-/*
-@Preview(showBackground = true)
-@Composable
-fun TerminalPreview() {
-    DTerminalTheme {
-        Terminal()
-    }
-}
-*/

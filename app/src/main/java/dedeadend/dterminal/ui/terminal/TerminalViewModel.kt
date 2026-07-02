@@ -1,22 +1,19 @@
 package dedeadend.dterminal.ui.terminal
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dedeadend.dterminal.core.AppDispatchers
-import dedeadend.dterminal.domain.model.Settings
 import dedeadend.dterminal.domain.model.TerminalLog
 import dedeadend.dterminal.domain.model.TerminalState
 import dedeadend.dterminal.domain.repository.CommandExecutor
 import dedeadend.dterminal.domain.repository.SettingsRepository
 import dedeadend.dterminal.domain.repository.TerminalLogRepository
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,25 +25,8 @@ class TerminalViewModel @Inject constructor(
     private val terminalLogRepository: TerminalLogRepository
 ) : ViewModel() {
 
-    val settings = settingsRepository.getSystemSettings()
-        .flowOn(dispatchers.io)
-        .stateIn(viewModelScope, SharingStarted.Lazily, Settings())
-
-    val logs = terminalLogRepository.getLogs()
-        .flowOn(dispatchers.io)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    var state by mutableStateOf(TerminalState.Idle)
-        private set
-
-    var toolsMenu by mutableStateOf(false)
-        private set
-
-    var isRoot by mutableStateOf(false)
-        private set
-
-    var command by mutableStateOf("")
-        private set
+    private val _uiState = MutableStateFlow(TerminalUiState())
+    val uiState = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch(dispatchers.io) {
@@ -55,43 +35,55 @@ class TerminalViewModel @Inject constructor(
                 settingsRepository.setFirstBootCompleted()
             }
         }
+        viewModelScope.launch {
+            settingsRepository.getSystemSettings()
+                .flowOn(dispatchers.io)
+                .collect { latestSettings ->
+                    _uiState.update { it.copy(settings = latestSettings) }
+                }
+        }
+        viewModelScope.launch {
+            terminalLogRepository.getLogs()
+                .flowOn(dispatchers.io)
+                .collect { latestLogs ->
+                    _uiState.update { it.copy(logs = latestLogs) }
+                }
+        }
     }
 
-    fun toggleToolsMenu(show: Boolean) {
-        toolsMenu = show
+    fun onEvent(event: TerminalUiEvent) {
+        when (event) {
+            is TerminalUiEvent.Execute -> execute()
+            is TerminalUiEvent.Terminate -> terminate()
+            is TerminalUiEvent.ToggleRoot -> _uiState.update { it.copy(isRoot = !it.isRoot) }
+            is TerminalUiEvent.ClearOutput -> clearOutput()
+            is TerminalUiEvent.OnCommandChange -> _uiState.update { it.copy(command = event.newCommand) }
+            is TerminalUiEvent.ToggleToolsMenu -> _uiState.update { it.copy(isToolsMenuOpen = !it.isToolsMenuOpen) }
+        }
     }
 
-    fun toggleRoot() {
-        isRoot = !isRoot
-    }
-
-    fun onCommandChange(newCommand: String) {
-        command = newCommand
-    }
-
-    fun clearOutput() {
+    private fun clearOutput() {
         viewModelScope.launch(dispatchers.io) {
             terminalLogRepository.clearLogs()
         }
     }
 
-    fun execute() {
-        if (command.trim().isEmpty() || state != TerminalState.Idle)
+    private fun execute() {
+        if (_uiState.value.command.isBlank() || _uiState.value.executionState != TerminalState.Idle)
             return
-        state = TerminalState.Running
+        _uiState.update { it.copy(executionState = TerminalState.Running) }
         viewModelScope.launch {
-            val cmd = command.trim()
-            command = ""
+            val cmd = _uiState.value.command.trim()
+            _uiState.update { it.copy(command = "") }
             try {
-                commandExecutor.execute(cmd, isRoot)
-            } catch (_: Exception) {
+                commandExecutor.execute(cmd, _uiState.value.isRoot)
             } finally {
-                state = TerminalState.Idle
+                _uiState.update { it.copy(executionState = TerminalState.Idle) }
             }
         }
     }
 
-    fun terminate() =
+    private fun terminate() =
         viewModelScope.launch {
             commandExecutor.cancel()
         }
@@ -125,10 +117,3 @@ class TerminalViewModel @Inject constructor(
     }
 }
 
-fun terminalLog2String(terminalLog: TerminalLog): String {
-    return if (terminalLog.state == TerminalState.Info)
-        "\n\n\n" + terminalLog.date + "\n" + terminalLog.message + "\n"
-    else
-        terminalLog.message
-
-}
