@@ -116,7 +116,7 @@ fun Terminal(
                 SelectionContainer {
                     Text(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .verticalScroll(scrollState)
                             .padding(12.dp),
                         text = uiState.terminalLogText,
