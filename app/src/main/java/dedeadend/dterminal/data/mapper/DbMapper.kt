@@ -15,7 +15,9 @@ fun SettingsEntity.toDomain(): Settings {
         isFirstBoot = this.isFirstBoot,
         logSuccessFontColor = this.logSuccessFontColor,
         logErrorFontColor = this.logErrorFontColor,
-        logInfoFontColor = this.logInfoFontColor
+        logInfoFontColor = this.logInfoFontColor,
+        logFontSize = this.logFontSize,
+        id = this.id
     )
 }
 
@@ -24,7 +26,9 @@ fun Settings.toEntity(): SettingsEntity {
         isFirstBoot = this.isFirstBoot,
         logSuccessFontColor = this.logSuccessFontColor,
         logErrorFontColor = this.logErrorFontColor,
-        logInfoFontColor = this.logInfoFontColor
+        logInfoFontColor = this.logInfoFontColor,
+        logFontSize = this.logFontSize,
+        id = this.id
     )
 }
 

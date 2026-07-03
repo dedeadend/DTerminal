@@ -1,5 +1,9 @@
 package dedeadend.dterminal.ui.terminal
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,12 +13,15 @@ import dedeadend.dterminal.domain.model.TerminalState
 import dedeadend.dterminal.domain.repository.CommandExecutor
 import dedeadend.dterminal.domain.repository.SettingsRepository
 import dedeadend.dterminal.domain.repository.TerminalLogRepository
+import dedeadend.dterminal.ui.theme.ErrorTextColor
+import dedeadend.dterminal.ui.theme.InfoTextColor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,7 +53,13 @@ class TerminalViewModel @Inject constructor(
             terminalLogRepository.getLogs()
                 .flowOn(dispatchers.io)
                 .collect { latestLogs ->
-                    _uiState.update { it.copy(logs = latestLogs) }
+                    val terminalLogText = generateTerminalLogText(latestLogs)
+                    _uiState.update {
+                        it.copy(
+                            logs = latestLogs,
+                            terminalLogText = terminalLogText
+                        )
+                    }
                 }
         }
     }
@@ -61,6 +74,51 @@ class TerminalViewModel @Inject constructor(
             is TerminalUiEvent.ToggleToolsMenu -> _uiState.update { it.copy(isToolsMenuOpen = !it.isToolsMenuOpen) }
         }
     }
+
+    private suspend fun generateTerminalLogText(lastestLogs: List<TerminalLog>) =
+        withContext(dispatchers.default) {
+            buildAnnotatedString {
+                lastestLogs.reversed().forEach { log ->
+                    withStyle(
+                        style = SpanStyle(
+                            color = when (log.state) {
+                                TerminalState.Info -> {
+                                    if (_uiState.value.settings.logInfoFontColor == -1)
+                                        InfoTextColor
+                                    else
+                                        Color(_uiState.value.settings.logInfoFontColor)
+                                }
+
+                                TerminalState.Error -> {
+                                    if (_uiState.value.settings.logErrorFontColor == -1)
+                                        ErrorTextColor
+                                    else
+                                        Color(_uiState.value.settings.logErrorFontColor)
+                                }
+
+                                else -> {
+                                    if (_uiState.value.settings.logSuccessFontColor == -1)
+                                        Color.Unspecified
+                                    else
+                                        Color(_uiState.value.settings.logSuccessFontColor)
+                                }
+                            }
+                        )
+                    ) {
+                        if (log.state == TerminalState.Info) {
+                            append("\n\n")
+                            append(log.date)
+                            append("\n")
+                            append(log.message)
+                            append("\n\n")
+                        } else {
+                            append(log.message)
+                            append("\n\n")
+                        }
+                    }
+                }
+            }
+        }
 
     private fun clearOutput() {
         viewModelScope.launch(dispatchers.io) {

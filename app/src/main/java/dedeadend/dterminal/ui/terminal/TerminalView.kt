@@ -4,21 +4,18 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ClearAll
@@ -36,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,7 +60,6 @@ import dedeadend.dterminal.domain.model.TerminalState
 import dedeadend.dterminal.ui.theme.ErrorTextColor
 import dedeadend.dterminal.ui.theme.InfoTextColor
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.yield
 
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -78,8 +75,6 @@ fun Terminal(
     val screenHeight = configuration.screenHeightDp.dp
     val maxHeight = screenHeight / 3
 
-    val scrollState = rememberLazyListState()
-
     LaunchedEffect(Unit) {
         terminalCommandChannel.collect { command ->
             viewModel.onEvent(TerminalUiEvent.OnCommandChange(command))
@@ -87,12 +82,19 @@ fun Terminal(
         }
     }
 
-    LaunchedEffect(uiState.logs) {
-        if (uiState.canScroll) {
-            yield()
-            scrollState.animateScrollToItem(0)
-        }
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(scrollState.maxValue) {
+        scrollState.animateScrollTo(scrollState.maxValue)
     }
+
+//    val listScrollState = rememberLazyListState()
+//    LaunchedEffect(uiState.logs) {
+//        if (uiState.canScroll) {
+//            yield()
+//            listScrollState.animateScrollToItem(0)
+//        }
+//    }
 
     Scaffold(
         topBar = {
@@ -109,22 +111,36 @@ fun Terminal(
                     .fillMaxWidth()
                     .padding(16.dp, 0.dp)
                     .weight(1f),
-                colors = CardDefaults.cardColors( containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
-                LazyColumn(
-                    state = scrollState,
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    reverseLayout = true
-                ) {
-                    items(
-                        items = uiState.logs,
-                        key = { item -> item.id },
-                        contentType = { item -> item.state }) { item ->
-                        OutputItem(item, uiState.settings)
-                    }
+                SelectionContainer {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(12.dp),
+                        text = uiState.terminalLogText,
+                        fontSize = uiState.settings.logFontSize.sp,
+                        fontFamily = FontFamily.Monospace,
+                        lineHeight = (uiState.settings.logFontSize + 5).sp,
+                        textAlign = TextAlign.Left,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
+//                LazyColumn(
+//                    state = listScrollState,
+//                    modifier = Modifier.fillMaxWidth(),
+//                    contentPadding = PaddingValues(8.dp),
+//                    verticalArrangement = Arrangement.spacedBy(12.dp),
+//                    reverseLayout = true
+//                ) {
+//                    items(
+//                        items = uiState.logs,
+//                        key = { item -> item.id },
+//                        contentType = { item -> item.state }) { item ->
+//                        OutputItem(item, uiState.settings)
+//                    }
+//                }
             }
             Card(
                 modifier = Modifier
@@ -132,6 +148,7 @@ fun Terminal(
                     .animateContentSize()
                     .heightIn(0.dp, maxHeight)
                     .padding(16.dp),
+                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainer),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Row(
@@ -151,7 +168,11 @@ fun Terminal(
                                         + " commands..."
                             )
                         },
-                        maxLines = Int.MAX_VALUE
+                        maxLines = Int.MAX_VALUE,
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
                     )
                     Box(
                         modifier = Modifier

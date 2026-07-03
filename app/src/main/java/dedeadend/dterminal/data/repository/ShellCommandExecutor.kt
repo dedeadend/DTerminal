@@ -24,7 +24,7 @@ class ShellCommandExecutor @Inject constructor(
 ) : CommandExecutor {
     private var process: Process? = null
     override suspend fun execute(command: String, isRoot: Boolean) {
-        withContext(dispatchers.io) {
+        withContext(dispatchers.default) {
             historyRepository.addHistory(History(command))
             terminalLogRepository.addLog(
                 TerminalLog(
@@ -156,8 +156,36 @@ class ShellCommandExecutor @Inject constructor(
 
                 • sudo [cmd]
                   Simulate root privilege command.
+                  
+                  
+                ===== CUSTOMIZE =====
+                
+                
+                • font [size]
+                  Set terminal font size (5-25).
 
+                • font def
+                  Reset font size to default (11).
 
+                • color1 [r g b]
+                  Set Normal text color using RGB.
+
+                • color1 def
+                  Reset Normal text color to default.
+
+                • color2 [r g b]
+                  Set Error text color using RGB.
+
+                • color2 def
+                  Reset Error text color to default.
+
+                • color3 [r g b]
+                  Set Info text color using RGB.
+
+                • color3 def
+                  Reset Info text color to default.
+                  
+                  
                 ===== TEXT =====
                 
                 
@@ -228,34 +256,6 @@ class ShellCommandExecutor @Inject constructor(
 
                 • json [validate/format] [txt]
                   Validate or pretty-print JSON.
-
-
-                ===== CUSTOMIZE =====
-                
-                
-                • font [size]
-                  Set terminal font size (5-25).
-
-                • font def
-                  Reset font size to default (11).
-
-                • color1 [r g b]
-                  Set Normal text color using RGB.
-
-                • color1 def
-                  Reset Normal text color to default.
-
-                • color2 [r g b]
-                  Set Error text color using RGB.
-
-                • color2 def
-                  Reset Error text color to default.
-
-                • color3 [r g b]
-                  Set Info text color using RGB.
-
-                • color3 def
-                  Reset Info text color to default.
 
 
                 ===== IMPORTANT NOTES =====
@@ -338,7 +338,7 @@ class ShellCommandExecutor @Inject constructor(
                     terminalLogRepository.addLog(
                         TerminalLog(
                             TerminalState.Error,
-                            "Usage: font [size/def]"
+                            "Usage: font [size] or [def]"
                         )
                     )
                 }
@@ -1013,7 +1013,7 @@ class ShellCommandExecutor @Inject constructor(
         settingsRepository: SettingsRepository,
         terminalLogRepository: TerminalLogRepository
     ) {
-        val usage = "Usage: color$colorType [r g b/def]"
+        val usage = "Usage: color$colorType [r g b] or [def]"
         when (tokens.size) {
             2 -> {
                 if (tokens[1] == "def") {
