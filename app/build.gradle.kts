@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("com.chaquo.python")
 }
 
 android {
@@ -13,12 +14,29 @@ android {
 
     defaultConfig {
         applicationId = "dedeadend.dterminal"
-        minSdk = 26
+        minSdk = 30
         targetSdk = 36
         versionCode = 12
         versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    flavorDimensions.add("abi")
+
+    productFlavors {
+        create("phone") {
+            dimension = "abi"
+            ndk {
+                abiFilters.add("arm64-v8a")
+            }
+        }
+        create("emulator") {
+            dimension = "abi"
+            ndk {
+                abiFilters.add("x86_64")
+            }
+        }
     }
 
     buildTypes {
@@ -39,6 +57,16 @@ android {
         compose = true
     }
 }
+
+chaquopy {
+    defaultConfig {
+        version = "3.13"
+        pip {
+            install("cryptography")
+        }
+    }
+}
+
 
 dependencies {
     implementation(libs.androidx.core.ktx)

@@ -229,7 +229,7 @@ private fun HistoryItem(
                     Text(
                         text = "Command:",
                         textAlign = TextAlign.Left,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         fontStyle = FontStyle.Italic
                     )
                     Row(
@@ -252,24 +252,30 @@ private fun HistoryItem(
                             Text(
                                 text = history.command,
                                 textAlign = TextAlign.Left,
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                         Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
-                                .clickable(enabled = true) {
-                                    onExecuteClick()
-                                }, contentAlignment = Alignment.Center
+                            modifier = Modifier.fillMaxHeight(),
+                            contentAlignment = Alignment.BottomCenter
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Run",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .clickable(enabled = true) {
+                                        onExecuteClick()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = "Run",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
                         }
                     }
                 }

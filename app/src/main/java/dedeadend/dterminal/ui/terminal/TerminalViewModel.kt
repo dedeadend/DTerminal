@@ -106,14 +106,14 @@ class TerminalViewModel @Inject constructor(
                         )
                     ) {
                         if (log.state == TerminalState.Info) {
-                            append("\n\n")
+                            append("\n\n\n")
                             append(log.date)
                             append("\n")
                             append(log.message)
                             append("\n\n")
                         } else {
                             append(log.message)
-                            append("\n\n")
+                            append("\n")
                         }
                     }
                 }
@@ -159,9 +159,9 @@ class TerminalViewModel @Inject constructor(
                                             
                                                   
                                                               
-            😍 I'm finally installed! I was getting bored on the Github.com/dedeadend...
+            😍 I'm finally installed! I was getting bored on the Github...
             
-            ✨ Execute 'help' command to see DTerminal commands
+            ✨ Execute 'help' command to view the extended commands and guides for DTerminal.
             
             ☕ Coffee is not included!
             

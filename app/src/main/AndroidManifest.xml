@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
 
     <application
         android:name=".App"
         android:allowBackup="false"
-        android:fullBackupOnly="false"
         android:dataExtractionRules="@null"
         android:fullBackupContent="@null"
-        tools:replace="android:allowBackup"
+        android:fullBackupOnly="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/Theme.DTerminal">
+        android:theme="@style/Theme.DTerminal"
+        tools:replace="android:allowBackup">
 
         <activity
             android:name=".MainActivity"
@@ -26,6 +30,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".data.datasource.PythonService"
+            android:exported="false"
+            android:process=":python_worker" />
 
     </application>
 </manifest>

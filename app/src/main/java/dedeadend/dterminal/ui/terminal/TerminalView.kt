@@ -1,6 +1,8 @@
 package dedeadend.dterminal.ui.terminal
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.os.Environment
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -50,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dedeadend.dterminal.R
@@ -78,13 +83,12 @@ fun Terminal(
     LaunchedEffect(Unit) {
         terminalCommandChannel.collect { command ->
             viewModel.onEvent(TerminalUiEvent.OnCommandChange(command))
-            viewModel.onEvent(TerminalUiEvent.Execute)
         }
     }
 
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(scrollState.maxValue) {
+    LaunchedEffect(uiState.terminalLogText) {
         scrollState.animateScrollTo(scrollState.maxValue)
     }
 
@@ -248,9 +252,10 @@ private fun OutputItem(terminalLog: TerminalLog, settings: Settings) {
 @Composable
 private fun TerminalTopBar(
     viewmodel: TerminalViewModel,
-    uiState: TerminalUiState
+    uiState: TerminalUiState,
 ) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     BaseTopBar(actions = {
         Box(
             modifier = Modifier.padding(0.dp, 24.dp, 0.dp, 0.dp)
@@ -325,6 +330,27 @@ private fun TerminalTopBar(
                         )
                     }
                 )
+                if (!Environment.isExternalStorageManager()) {
+                    DropdownMenuItem(
+                        text = { Text("Storage Permission") },
+                        onClick = {
+                            viewmodel.onEvent(TerminalUiEvent.ToggleToolsMenu(false))
+                            val intent =
+                                Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                                    data = "package:${context.packageName}".toUri()
+                                }
+                            context.startActivity(intent)
+
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Storage,
+                                contentDescription = "Github",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    )
+                }
             }
         }
     })

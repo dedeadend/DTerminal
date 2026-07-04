@@ -1,37 +1,30 @@
-package dedeadend.dterminal.data.repository
+package dedeadend.dterminal.data.datasource
 
 import android.os.Build
 import android.os.SystemClock
 import dedeadend.dterminal.core.AppDispatchers
-import dedeadend.dterminal.domain.model.History
 import dedeadend.dterminal.domain.model.TerminalLog
 import dedeadend.dterminal.domain.model.TerminalState
-import dedeadend.dterminal.domain.repository.CommandExecutor
-import dedeadend.dterminal.domain.repository.HistoryRepository
 import dedeadend.dterminal.domain.repository.SettingsRepository
 import dedeadend.dterminal.domain.repository.TerminalLogRepository
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.Volatile
 
-class ShellCommandExecutor @Inject constructor(
-    private val historyRepository: HistoryRepository,
+@Singleton
+class ShellManager @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val terminalLogRepository: TerminalLogRepository,
-    private val dispatchers: AppDispatchers
-) : CommandExecutor {
+    private val dispatchers: AppDispatchers,
+) {
+    @Volatile
     private var process: Process? = null
-    override suspend fun execute(command: String, isRoot: Boolean) {
+    suspend fun execute(command: String, isRoot: Boolean) {
         withContext(dispatchers.default) {
-            historyRepository.addHistory(History(command))
-            terminalLogRepository.addLog(
-                TerminalLog(
-                    TerminalState.Info,
-                    (if (isRoot) "#: " else "$: ") + command
-                )
-            )
             try {
                 process = ProcessBuilder(if (isRoot) "su" else "sh")
                     .redirectErrorStream(true)
@@ -58,7 +51,7 @@ class ShellCommandExecutor @Inject constructor(
                 process?.inputStream?.bufferedReader()?.use { reader ->
                     var line: String?
                     while (reader.readLine().also { line = it } != null) {
-                        terminalLogRepository.addLog(TerminalLog(TerminalState.Success, line!!))
+                        terminalLogRepository.addLog(TerminalLog(TerminalState.Success, "$line\n"))
                     }
                 }
                 process?.waitFor()
@@ -81,8 +74,8 @@ class ShellCommandExecutor @Inject constructor(
         }
     }
 
-    override suspend fun cancel() {
-        withContext(dispatchers.io) {
+    suspend fun cancel() {
+        withContext(dispatchers.default) {
             if (process == null) {
                 terminalLogRepository.addLog(
                     TerminalLog(TerminalState.Error, "There is no active process")
@@ -130,9 +123,7 @@ class ShellCommandExecutor @Inject constructor(
         when (val baseCommand = tokens[0].lowercase()) {
             "help" -> {
                 val helpText = """
-                [ DTerminal Help ]
-
-
+                    
                 ===== SYSTEM =====
                 
                 
@@ -258,20 +249,67 @@ class ShellCommandExecutor @Inject constructor(
                   Validate or pretty-print JSON.
 
 
+                ===== PYTHON ENGINE =====
+                
+            
+                • py:
+                  If the FIRST line of your input block 
+                  is exactly 'py', the execution engine 
+                  switches to Python mode. All subsequent 
+                  lines will be executed as pure Python 
+                  code instead of Shell commands.
+                  e.g. Type:
+                      py
+                      pip install requests
+                      import requests
+                      res = requests.get("https://api.ipify.org")
+                      print("Public IP:", res.text)
+                  Then run all lines at once.
+                  
+                • pip install [package]
+                  Download & install a Pure Python package.
+            
+                • pip uninstall [package]
+                  Completely remove an installed package.
+            
+                • pip list
+                  List all user-installed Python packages.
+            
+                • python [file_path] [args...]
+                  Execute a local Python script from storage.
+                  Supports inline CLI arguments & quotes.
+            
+            
                 ===== IMPORTANT NOTES =====
                 
                 
                 • Shell Support:
                   Standard commands (ls, cd, etc.) 
                   are fully supported.
-
+            
                 • Multi-line Execution:
                   Each run is an isolated process. 
                   You can combine related commands.
                   e.g. Type:
                        cd /sdcard
                        ls
-                  Then execute both lines at once.
+                  Then run all lines at once.
+            
+                • Script Arguments & Inputs:
+                  Interactive input() is disabled for 
+                  terminal safety (returns empty string).
+                  Pass parameters as arguments instead:
+                  e.g. python /sdcard/script.py "hello"
+                  Inside script: arg1 = sys.argv[1]
+                  
+                • Python Runtime:
+                  Powered by Python 3.13. Pre-bundled with
+                  'cryptography' native C extension.
+                  
+                • Pip Package Limitations:
+                  Only Pure Python packages (none-any.whl) 
+                  can be installed via runtime pip.
+                  
             """.trimIndent()
                 terminalLogRepository.addLog(TerminalLog(TerminalState.Success, helpText))
             }
@@ -613,7 +651,7 @@ class ShellCommandExecutor @Inject constructor(
                 terminalLogRepository.addLog(
                     TerminalLog(
                         TerminalState.Success,
-                        "Nice try! Use 'su' instead."
+                        "Nice try! But you have no power here :)\nSwitch to Root mode or use 'su' instead"
                     )
                 )
             }

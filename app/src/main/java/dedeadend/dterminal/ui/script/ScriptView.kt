@@ -288,7 +288,7 @@ private fun ScriptItem(
                     Text(
                         text = "Name:",
                         textAlign = TextAlign.Left,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         fontStyle = FontStyle.Italic
                     )
                     Row(

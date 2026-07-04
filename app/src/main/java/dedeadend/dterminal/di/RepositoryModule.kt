@@ -4,10 +4,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dedeadend.dterminal.data.repository.CommandExecutorImpl
 import dedeadend.dterminal.data.repository.HistoryRepositoryImpl
 import dedeadend.dterminal.data.repository.ScriptRepositoryImpl
 import dedeadend.dterminal.data.repository.SettingsRepositoryImpl
-import dedeadend.dterminal.data.repository.ShellCommandExecutor
 import dedeadend.dterminal.data.repository.TerminalLogRepositoryImpl
 import dedeadend.dterminal.domain.repository.CommandExecutor
 import dedeadend.dterminal.domain.repository.HistoryRepository
@@ -39,6 +39,6 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindCommandExecutor(impl: ShellCommandExecutor): CommandExecutor
+    abstract fun bindCommandExecutor(impl: CommandExecutorImpl): CommandExecutor
 
 }
