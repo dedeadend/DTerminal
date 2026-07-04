@@ -16,8 +16,8 @@ android {
         applicationId = "dedeadend.dterminal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.2"
+        versionCode = 20
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
