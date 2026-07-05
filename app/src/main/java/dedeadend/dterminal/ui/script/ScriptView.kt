@@ -187,8 +187,8 @@ fun Script(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(items = uiState.scripts, key = { item -> item.id }) { item ->
                 val animatedProgress = remember { Animatable(0f) }
@@ -317,7 +317,7 @@ private fun ScriptItem(
                         Box(
                             modifier = Modifier
                                 .padding(8.dp)
-                                .size(42.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable(enabled = true) { onEditClick() },
@@ -332,7 +332,7 @@ private fun ScriptItem(
                         Box(
                             modifier = Modifier
                                 .padding(8.dp)
-                                .size(42.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable(enabled = true) { onExecuteClick() },

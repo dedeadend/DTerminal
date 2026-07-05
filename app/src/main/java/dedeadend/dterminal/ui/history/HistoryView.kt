@@ -137,8 +137,8 @@ fun History(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             reverseLayout = true
         ) {
             items(items = uiState.history, key = { item -> item.id }) { item ->
@@ -262,7 +262,7 @@ private fun HistoryItem(
                             Box(
                                 modifier = Modifier
                                     .padding(8.dp)
-                                    .size(42.dp)
+                                    .size(48.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.primary)
                                     .clickable(enabled = true) {
