@@ -149,7 +149,7 @@ class PythonManager @Inject constructor(
             }
 
 
-            103 -> {
+            PythonService.MSG_RUN_COMPLETED -> {
                 streamChannel?.trySend(StreamEvent.Finished)
                 true
             }
