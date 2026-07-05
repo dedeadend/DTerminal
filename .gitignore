@@ -2,6 +2,9 @@
 /build/
 /release/
 app/release/
+app/phone/
+app/emulator/
+
 *.apk
 *.aab
 *.bundle
