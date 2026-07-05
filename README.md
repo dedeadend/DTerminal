@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="screenshots/DTerminalTheme.png" alt="Dterminal Theme" width="100%">
+  <img src="screenshots/DTerminalBanner.png" alt="Dterminal Theme" width="100%">
 </p>
 
 <p align="center">
