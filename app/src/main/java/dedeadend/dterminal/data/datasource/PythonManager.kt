@@ -30,6 +30,19 @@ class PythonManager @Inject constructor(
     private val terminalLogRepository: TerminalLogRepository,
     private val dispatchers: AppDispatchers
 ) {
+
+    private val systemErrors = listOf(
+        "Python Runtime Error", "Failed to talk", "Traceback (most recent call last):"
+    )
+    private val pythonErrors = listOf(
+        "SyntaxError:", "IndentationError:", "NameError:", "TypeError:",
+        "ValueError:", "IndexError:", "KeyError:", "AttributeError:",
+        "ZeroDivisionError:", "ModuleNotFoundError:", "ImportError:",
+        "RuntimeError:", "FileNotFoundError:", "PermissionError:",
+        "OSError:", "OverflowError:", "UnboundLocalError:", "AssertionError:"
+    )
+
+
     @Volatile
     private var mService: Messenger? = null
 
@@ -57,7 +70,10 @@ class PythonManager @Inject constructor(
                 if (warmup) {
                     warmup = false
                     terminalLogRepository.addLog(
-                        TerminalLog(TerminalState.Error, "Starting Python Engine...\n")
+                        TerminalLog(
+                            TerminalState.Error,
+                            "\n----------------------\nStarting Python Engine\n----------------------\n\n"
+                        )
                     )
                     delay(3000L)
                     execute(codeBlock)
@@ -115,7 +131,7 @@ class PythonManager @Inject constructor(
 
                 streamChannel?.trySend(
                     StreamEvent.Chunk(
-                        "Process terminated by user.\n",
+                        "Process terminated by user.",
                         TerminalState.Error
                     )
                 )
@@ -136,13 +152,16 @@ class PythonManager @Inject constructor(
 
             PythonService.MSG_OUTPUT_RESULT -> {
                 val result = msg.data.getString(PythonService.KEY_RESULT_TEXT) ?: ""
-
+                val trimmedResult = result.trim()
                 val state =
-                    if (result.contains("Python Runtime Error") || result.contains("Failed to talk")) {
+                    if (
+                        systemErrors.any { trimmedResult.contains(it) } ||
+                        pythonErrors.any { trimmedResult.startsWith(it) }
+                    )
                         TerminalState.Error
-                    } else {
+                    else
                         TerminalState.Success
-                    }
+
 
                 streamChannel?.trySend(StreamEvent.Chunk(result, state))
                 true

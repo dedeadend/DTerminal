@@ -156,10 +156,9 @@ def safe_list(packages_dir):
         print("No user packages installed.")
         return True
 
-    print(f"{'Package':<25}")
-    print("-" * 25)
+    print(f"{'===== Packages ====='}")
     for package in sorted(db.keys()):
-        print(f"{package:<25}")
+        print(f"{package}")
     return True
 
 
