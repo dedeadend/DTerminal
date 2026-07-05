@@ -18,7 +18,7 @@ Forget outdated terminals! DTerminal is a modern, fast, lightweight **Android te
 ## ✨ Features
 
 - 💯 **Full Shell Authority**: High-speed, isolated execution for both standard (`sh`) and root (`su`) commands.
-- 🐍 **Embedded Python 3.13 Engine**: An offline Python runtime powered by Chaquopy, featuring native cryptography C-extensions. Ready for advanced security tools, SSH automation, and cryptographic scripting.
+- 🐍 **Embedded Python 3.13 Engine**: An offline Python runtime powered by Chaquopy, featuring native `cryptography` C-extensions. Ready for advanced security tools, SSH automation, and cryptographic scripting.
 - 🫧 **Multi-line Batch Execution**: Combine, edit, and execute multiple related shell or Python operations sequentially in a single process run.
 - 📝 **Workspace Script Manager**: Save, organize, and quickly recall your frequently used custom automation scripts without repetitive typing.
 - 📜 **Persistent Command History**: Instant access to your previously executed shell and Python commands in a clean, scrollable log layout.
