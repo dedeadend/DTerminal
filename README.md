@@ -12,7 +12,7 @@
 
 # 🍃 DTerminal
 
-Forget clunky and dated terminals. DTerminal is a modern, ultra-lightweight **terminal emulator** and **Python scripting workspace** for **Android**, built entirely with **Jetpack Compose**. It seamlessly unifies asynchronous **standard/root shells** with an embedded **Python 3.13 runtime**, offering a powerful and reactive environment for **automation** and advanced scripting on a **highly responsive user interface**.
+Forget outdated terminals! DTerminal is a modern, fast, lightweight **Android terminal** app with **built-in Python** support. No lag, no bloat—just a clean, simple, and powerful environment for automation and scripting on a smooth interface built with **Jetpack Compose**.
 
 
 ## ✨ Features
