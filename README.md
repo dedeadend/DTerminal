@@ -129,7 +129,7 @@ DTerminal extends standard shell capabilities with a built-in suite of specializ
 - **UI**: Jetpack Compose (Material 3 Adaptive Design)
 - **Architecture**: MVI (Model-View-Intent) + Clean Architecture + Unidirectional Data Flow (UDF)
 - **Concurrency**: Kotlin Coroutines & Flow
-- **Python Subsystem**: Chaquopy (Python 3.13 Runtime Embedder)
+- **Python Subsystem**: Chaquopy (Python 3.13 Runtime)
 - **Dependency Injection**: Hilt
 - **Database**: Room
 - **Build System**: Gradle (Kotlin DSL)
