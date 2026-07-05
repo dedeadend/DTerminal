@@ -156,7 +156,7 @@ class ShellManager @Inject constructor(
                   Set terminal font size (5-25).
 
                 • font def
-                  Reset font size to default (11).
+                  Reset font size to default (10).
 
                 • color1 [r g b]
                   Set Normal text color using RGB.
@@ -346,11 +346,11 @@ class ShellManager @Inject constructor(
             "font" -> {
                 if (tokens.size == 2) {
                     if (tokens[1] == "def") {
-                        settingsRepository.setLogFontSize(11)
+                        settingsRepository.setLogFontSize(10)
                         terminalLogRepository.addLog(
                             TerminalLog(
                                 TerminalState.Success,
-                                "Font size set to default (11)."
+                                "Font size set to default (10)."
                             )
                         )
                     } else {

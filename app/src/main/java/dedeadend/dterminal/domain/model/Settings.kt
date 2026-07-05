@@ -5,6 +5,6 @@ data class Settings(
     val logSuccessFontColor: Int = -1,
     val logErrorFontColor: Int = -1,
     val logInfoFontColor: Int = -1,
-    val logFontSize: Int = 11,
+    val logFontSize: Int = 10,
     val id: Int = 1
 )
