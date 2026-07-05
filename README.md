@@ -12,16 +12,20 @@
 
 # 🍃 DTerminal
 
-Forget clunky and dated terminals. DTerminal is a modern terminal emulator for Android, built with **Jetpack Compose**. It provides access to both standard and root shells through a reactive and asynchronous interface, designed for fluid performance and a clean, responsive user experience. All without the lag of traditional terminal apps.
+Forget clunky and dated terminals. DTerminal is a modern, ultra-lightweight **terminal emulator** and **Python scripting workspace** for **Android**, built entirely with **Jetpack Compose**. It seamlessly unifies asynchronous **standard/root shells** with an embedded **Python 3.13 runtime**, offering a powerful and reactive environment for **automation** and advanced scripting on a **highly responsive user interface**.
 
 
 ## ✨ Features
 
-- 💯 **Full Shell Authority**: High-speed execution for both standard (sh) and root (su) commands.
-- ⚡ **Ultra-Lightweight**: Optimized for speed and low battery consumption using the latest Material You standards.
-- 🚀 **Persistent Scripting**: A smart workspace to save and execute your custom scripts. eliminating repetitive typing.
-- 📜 **Command History**: Persistent access to your command history in a clean and organized layout.
-- 🎨 **Real-time Modern UI**: Instant reactive customization of fonts and colors.
+- 💯 **Full Shell Authority**: High-speed, isolated execution for both standard (`sh`) and root (`su`) commands.
+- 🐍 **Embedded Python 3.13 Engine**: An offline Python runtime powered by Chaquopy, featuring native cryptography C-extensions. Ready for advanced security tools, SSH automation, and cryptographic scripting.
+- 🫧 **Multi-line Batch Execution**: Combine, edit, and execute multiple related shell or Python operations sequentially in a single process run.
+- 📝 **Workspace Script Manager**: Save, organize, and quickly recall your frequently used custom automation scripts without repetitive typing.
+- 📜 **Persistent Command History**: Instant access to your previously executed shell and Python commands in a clean, scrollable log layout.
+- 🪄 **Magic 'py' Interpreter Mode**: Type `py` on the very first line of your input block to instantly switch the entire execution engine into a pure Python environment for all subsequent lines.
+- 📦 **Runtime Pip Package Manager**: Download, extract, and update pure Python packages (`none-any.whl`) directly from PyPI on the fly.
+- 🔗 **Advanced Argument Parsing**: Execute local scripts seamlessly with standard terminal syntax, including full support for custom inline CLI arguments and quote strings.
+- 🎨 **Real-time Modern UI**: Instant dynamic customization of font size and multi-layered typography colors.
 
 
 ## 📸 Screenshots
@@ -36,8 +40,8 @@ Forget clunky and dated terminals. DTerminal is a modern terminal emulator for A
 
 ### Prerequisites
 
-- Android 8.0+ "Oreo"
-- (Optional) Root access for su commands
+- Android 11.0+ (API 30) or higher
+- (Optional) Root access (Magisk / KernelSU / APatch) for root privilege commands
 
 ### Installation
 
@@ -48,32 +52,86 @@ Forget clunky and dated terminals. DTerminal is a modern terminal emulator for A
 
 ## 📌 Note
 
-Since DTerminal is a newly released, self-signed APK not yet distributed via the Play Store, Google Play Protect may flag it as "Unknown". As an open-source project, you can always audit the source code yourself or build the APK from source to ensure total transparency.
+Since DTerminal is a self-signed APK not distributed via the Google Play Store, Google Play Protect may flag it as "Unknown". As an open-source project, you can always audit the source code yourself or build the APK from source to ensure total transparency.
 
 
-## ⌨️ Custom Commands
+## ⚙️ Custom Commands Reference
 
-DTerminal extends standard shell functionality with integrated custom commands:
+DTerminal extends standard shell capabilities with a built-in suite of specialized utility subsystems:
 
+### System Commands
 | Command | Usage | Description |
-|---------|-------|-------------|
-| `help` | `help` | Show list of custom commands |
-| `about` | `about` | Information about DTerminal |
-| `clear/cls` | `clear` | Clear all terminal logs |
-| `sysinfo` | `sysinfo` | Display device and OS details |
-| `random` | `random <a> <b>` | Generate a random number between a and b |
-| `sudo` | `sudo <cmd>` | Run a specific command with root privileges |
-| `font` | `font <size>` | Set terminal font size |
-| `color` | `color <r> <g> <b>` | Set terminal text color |
+|:---|:---|:---|
+| `help` | `help` | Show this command list documentation |
+| `about` | `about` | Display app and developer info |
+| `clear` / `cls` | `clear` / `cls` | Clear all terminal console logs |
+| `sysinfo` | `sysinfo` | Advanced hardware & OS details |
+| `uptime` | `uptime` | Show system boot duration |
+| `datetime` | `datetime` | Display current date & time |
+| `sudo` | `sudo [cmd]` | Simulate root privilege command execution |
+
+### Customization Commands
+| Command | Usage | Description |
+|:---|:---|:---|
+| `font` | `font [size]` | Set terminal font size (5-25) |
+| `font def` | `font def` | Reset font size to default (11) |
+| `color1` | `color1 [r g b]` | Set Normal text color using RGB values |
+| `color1 def` | `color1 def` | Reset Normal text color to default |
+| `color2` | `color2 [r g b]` | Set Error text color using RGB values |
+| `color2 def` | `color2 def` | Reset Error text color to default |
+| `color3` | `color3 [r g b]` | Set Info text color using RGB values |
+| `color3 def` | `color3 def` | Reset Info text color to default |
+
+### Text Processing Utilities
+| Command | Usage | Description |
+|:---|:---|:---|
+| `random` | `random [a] [b]` | Generate number between a and b |
+| `uuid` | `uuid` | Generate a random UUID v4 string |
+| `length` | `length [text]` | Count characters in a string |
+| `case` | `case [up/low] [text]` | Convert text to upper/lowercase |
+| `wordcount` | `wordcount [text]` | Count words in the given text |
+| `sort` | `sort [word1] [word2] ...` | Sort list of words alphabetically |
+| `shuffle` | `shuffle [word1] [word2] ...` | Randomly shuffle list of words |
+| `reverse` | `reverse [text]` | Reverse character order of text |
+| `palindrome`| `palindrome [text]` | Check if text is a palindrome |
+| `regex` | `regex [pattern] [text]` | Find regex matches within text |
+
+### Crypto & Encoding Tools
+| Command | Usage | Description |
+|:---|:---|:---|
+| `base64` | `base64 [enc/dec] [text]` | Encode or decode Base64 strings |
+| `hash` | `hash [algo] [text]` | Generate md5, sha1, sha256 checksums |
+| `url` | `url [enc/dec] [text]` | Encode or decode URL components |
+| `rot13` | `rot13 [text]` | Apply ROT13 cipher to text |
+| `morse` | `morse [enc/dec] [text]` | Encode or decode Morse code |
+| `binary` | `binary [enc/dec] [text]` | Convert text to/from binary stream |
+| `hex` | `hex [enc/dec] [text]` | Convert text to/from hex string |
+| `ascii` | `ascii [single char]` | Get decimal ASCII code of a char |
+
+### Developer Utilities
+| Command | Usage | Description |
+|:---|:---|:---|
+| `pass` | `pass [length]` | Generate secure random password |
+| `json` | `json [validate/format] [txt]` | Validate or pretty-print JSON strings |
+
+### Python Engine Subsystem
+| Command | Usage | Description |
+|:---|:---|:---|
+| `py` | Line-1 execution trigger | Switch execution engine block to interactive Python mode |
+| `python` | `python [file_path] [args...]` | Execute a local script from storage with CLI args & quotes |
+| `pip install`| `pip install [package]` | Download & install a Pure Python package from PyPI |
+| `pip uninstall`| `pip uninstall [package]`| Completely remove an installed package from runtime environment |
+| `pip list` | `pip list` | List all user-installed Python packages |
 
 
 ## 🛠 Tech Stack
 
-- **UI**: Jetpack Compose (Material 3)
-- **Architecture**: MVVM + Clean Architecture
+- **UI**: Jetpack Compose (Material 3 Adaptive Design)
+- **Architecture**: MVI (Model-View-Intent) + Clean Architecture + Unidirectional Data Flow (UDF)
+- **Concurrency**: Kotlin Coroutines & Flow
+- **Python Subsystem**: Chaquopy (Python 3.13 Runtime Embedder)
 - **Dependency Injection**: Hilt
 - **Database**: Room
-- **Concurrency**: Kotlin Coroutines & Flow
 - **Build System**: Gradle (Kotlin DSL)
 
 
