@@ -12,7 +12,7 @@
 
 # 🍃 DTerminal
 
-Forget outdated terminals! DTerminal is a modern, fast, lightweight **Android terminal** app with **built-in Python** support. No lag, no bloat—just a clean, simple, and powerful environment for automation and scripting on a smooth interface built with **Jetpack Compose**.
+Forget outdated terminals! DTerminal is a modern, fast, lightweight **Android terminal** app with **built-in Python** support. No lag, no bloat. Just a clean, simple, and powerful environment for automation and scripting on a smooth interface built with **Jetpack Compose**.
 
 
 ## ✨ Features
