@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="screenshots/DTerminalBanner.png" alt="Dterminal Banner" width="100%">
+  <img src="screenshots/DTerminalBanner.png" alt="DTerminal - Android terminal with Python" width="100%">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/dedeadend/DTerminal?style=for-the-badge&color=green&logo=android" alt="Release Badge"/>
-  <img src="https://img.shields.io/github/downloads/dedeadend/DTerminal/total?style=for-the-badge&color=orange&logo=github" alt="Downloads Badge"/>
-  <img src="https://api.visitorbadge.io/api/visitors?path=dedeadend%2Fdterminal&label=Views&countColor=blue" alt="Views Badge"/>
-  <img src="https://img.shields.io/github/license/dedeadend/DTerminal?style=for-the-badge&color=yellow" alt="License Badge"/>
+  <img src="https://img.shields.io/github/v/release/dedeadend/DTerminal?style=for-the-badge&color=green&logo=android" alt="Latest release" />
+  <img src="https://img.shields.io/github/downloads/dedeadend/DTerminal/total?style=for-the-badge&color=orange&logo=github" alt="Total downloads" />
+  <img src="https://api.visitorbadge.io/api/visitors?path=dedeadend%2Fdterminal&label=Views&countColor=blue" alt="Repository views" />
+  <img src="https://img.shields.io/github/license/dedeadend/DTerminal?style=for-the-badge&color=yellow" alt="GPL-3.0 license" />
 </p>
 
 
@@ -20,38 +20,78 @@ Forget outdated terminals! DTerminal is a modern, fast, lightweight **Android te
 - 💯 **Full Shell Authority**: High-speed, isolated execution for both standard (`sh`) and root (`su`) commands.
 - 🐍 **Embedded Python 3.13 Engine**: An offline Python runtime powered by Chaquopy, featuring native `cryptography` C-extensions. Ready for advanced security tools, SSH automation, and cryptographic scripting.
 - 🫧 **Multi-line Batch Execution**: Combine, edit, and execute multiple related shell or Python operations sequentially in a single process run.
-- 📝 **Workspace Script Manager**: Save, organize, and quickly recall your frequently used custom automation scripts without repetitive typing.
-- 📜 **Persistent Command History**: Instant access to your previously executed shell and Python commands in a clean, scrollable log layout.
+- 📝 **Script Manager**: Save, organize, and quickly recall your frequently used custom automation scripts without repetitive typing.
+- 📜 **Command History**: Instant access to your previously executed shell and Python commands in a clean, scrollable log layout.
 - 🪄 **Magic 'py' Interpreter Mode**: Type `py` on the very first line of your input block to instantly switch the entire execution engine into a pure Python environment for all subsequent lines.
 - 📦 **Runtime Pip Package Manager**: Download, extract, and update pure Python packages (`none-any.whl`) directly from PyPI on the fly.
 - 🔗 **Advanced Argument Parsing**: Execute local scripts seamlessly with standard terminal syntax, including full support for custom inline CLI arguments and quote strings.
 - 🎨 **Real-time Modern UI**: Instant dynamic customization of font size and multi-layered typography colors.
 
 
+## ⚙️ How It Works
+
+DTerminal provides a terminal environment for both Android shell commands and Python execution.
+
+Shell commands are executed through the Android shell, while Python commands and scripts are handled by the embedded Python 3.13 runtime.
+
+### Shell Execution
+
+Standard shell commands can be entered directly into the terminal.
+
+By default, commands run with the application's normal shell privileges. To execute commands with root privileges, open the three-dot menu and select **Switch to Root mode**. Once enabled, all subsequent commands are executed through `su` until the mode is switched back.
+
+### Python Execution
+
+DTerminal includes Python 3.13 through Chaquopy. Python can be used interactively inside the terminal or for scripts stored in the application workspace.
+
+Starting a block with `py` switches that block to Python execution:
+
+```text
+py
+print("Hello from Python")
+```
+
+Local Python scripts can also be executed with arguments:
+
+```text
+python script.py arg1 arg2
+```
+
+### Runtime Packages
+
+DTerminal includes a pip-style package workflow for pure-Python packages available from PyPI.
+
+```text
+pip install package
+pip list
+pip uninstall package
+```
+
+Packages are installed into the application's Python runtime and remain available for later executions.
+
+
 ## 📸 Screenshots
 
 | Scripts | History |
-| :---: | :---: |
-| <img src="screenshots/DTerminalScript.png" alt="Dterminal Script"> | <img src="screenshots/DTerminalHistory.png" alt="Dterminal History"> |
-
+|:---:|:---:|
+| <img src="screenshots/DTerminalScript.png" alt="DTerminal script workspace" /> | <img src="screenshots/DTerminalHistory.png" alt="DTerminal command history" /> |
 
 
 ## 📥 Getting Started
 
-### Prerequisites
+### Requirements
 
-- Android 11.0+ (API 30) or higher
-- (Optional) Root access (Magisk / KernelSU / APatch) for root privilege commands
+- Android 11.0+ (API 30)
+- **Root** is optional and only required for commands that need root privileges
 
 ### Installation
 
-1. Download the latest released APK from the [Releases Page](https://github.com/dedeadend/DTerminal/releases/latest).
-2. Install downloaded APK file.
+1. Download the latest APK from the [Releases Page](https://github.com/dedeadend/DTerminal/releases/latest).
+2. Install the APK on your Android device.
 3. Enjoy 💚
 
-
 > [!NOTE]
-> Since DTerminal is a self-signed APK not distributed via the Google Play Store, Google Play Protect may flag it as "Unknown". As an open-source project, you can always audit the source code yourself or build the APK from source to ensure total transparency.
+> Since KillMyApps is a self-signed APK not distributed via the Google Play Store, Google Play Protect may flag it as "Unknown". As an open-source project, you can always audit the source code yourself or build the APK from source to ensure total transparency.
 
 
 ## ⚙️ Custom Commands Reference
@@ -136,29 +176,47 @@ DTerminal extends standard shell capabilities with a built-in suite of specializ
 
 ## 🤝 Contributing
 
-Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+Contributions are welcome.
 
-1. **Fork** the Project
-2. Create your Feature Branch  
-   `git checkout -b feature/AmazingFeature`
-3. **Commit** your Changes  
-   `git commit -m 'Add some AmazingFeature'`
-4. **Push** to the Branch  
-   `git push origin feature/AmazingFeature`
-5. Open a **Pull Request**
+1. Fork the repository.
+2. Create a feature branch:
+
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+
+3. Commit your changes:
+
+   ```bash
+   git commit -m "Add some AmazingFeature"
+   ```
+
+4. Push the branch:
+
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+
+5. Open a Pull Request.
 
 
-## ♠️ Support
+## 🌐 Official DeDeadend Links
 
-Have questions or need help? Feel free to reach out:
+DTerminal is one of the **DeDeadend** projects:
 
 <div align="left">
-  <a href="https://t.me/dedeadend" target="_blank">
-    <img src="https://img.shields.io/static/v1?message=Telegram&logo=telegram&label=&color=2CA5E0&logoColor=white&labelColor=&style=for-the-badge" height="30" alt="telegram logo"  />
+  <a href="https://dedeadend.github.io/projects/dterminal/" target="_blank" rel="noreferrer noopener">
+    <img src="https://img.shields.io/static/v1?message=Website&logo=googlechrome&label=&color=000000&logoColor=white&labelColor=&style=for-the-badge" height="30" alt="DTerminal Website" />
   </a>
-  <!-- <a href="https://www.linkedin.com/in/dedeadend" target="_blank">
-    <img src="https://img.shields.io/static/v1?message=LinkedIn&logo=linkedin&label=&color=0077B5&logoColor=white&labelColor=&style=for-the-badge" height="30" alt="linkedin logo"  />
-  </a> -->
+  <a href="https://t.me/dedeadend_projects" target="_blank" rel="noreferrer noopener">
+    <img src="https://img.shields.io/static/v1?message=Channel&logo=telegram&label=&color=000000&logoColor=white&labelColor=&style=for-the-badge" height="30" alt="DeDeadend Projects Telegram Channel" />
+  </a>
+  <a href="https://t.me/dedeadend_community" target="_blank" rel="noreferrer noopener">
+    <img src="https://img.shields.io/static/v1?message=Community&logo=telegram&label=&color=000000&logoColor=white&labelColor=&style=for-the-badge" height="30" alt="DeDeadend Telegram Community" />
+  </a>
+  <a href="https://t.me/dedeadend" target="_blank" rel="noreferrer noopener">
+    <img src="https://img.shields.io/static/v1?message=Profile&logo=telegram&label=&color=000000&logoColor=white&labelColor=&style=for-the-badge" height="30" alt="DeDeadend Telegram Profile" />
+  </a>
 </div>
 
 
@@ -166,11 +224,11 @@ Have questions or need help? Feel free to reach out:
 
 If you find this project helpful, please give it a ⭐
 
-You can also support the development by buying me a coffee:
+You can also support the development through a donation:
 
 <div align="left">
   <a href="https://nowpayments.io/donation/dedeadend" target="_blank" rel="noreferrer noopener">
-     <img src="https://nowpayments.io/images/embeds/donation-button-black.svg" height="40" alt="Crypto donation button by NOWPayments">
+    <img src="https://nowpayments.io/images/embeds/donation-button-black.svg" height="40" alt="Crypto donation button by NOWPayments">
   </a>
 </div>
 
