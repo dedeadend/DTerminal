@@ -94,7 +94,7 @@ Packages are installed into the application's Python runtime and remain availabl
 > Since KillMyApps is a self-signed APK not distributed via the Google Play Store, Google Play Protect may flag it as "Unknown". As an open-source project, you can always audit the source code yourself or build the APK from source to ensure total transparency.
 
 
-## ⚙️ Custom Commands Reference
+## 🧩 Custom Commands Reference
 
 DTerminal extends standard shell capabilities with a built-in suite of specialized utility subsystems:
 
