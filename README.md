@@ -21,7 +21,7 @@ Forget outdated terminals! DTerminal is a modern **Android terminal** app with *
 - 🐍 **Embedded Python 3.13 Engine**: An offline Python runtime powered by Chaquopy, featuring native `cryptography` C-extensions. Ready for advanced security tools, SSH automation, and cryptographic scripting.
 - 🫧 **Multi-line Batch Execution**: Combine, edit, and execute multiple related shell or Python operations sequentially in a single process run.
 - 📝 **Script Manager**: Save, organize, and quickly recall your frequently used custom automation scripts without repetitive typing.
-- 📜 **Command History**: Instant access to your previously executed shell and Python commands in a clean, scrollable log layout.
+- 📜 **Command History**: Instant access to your previously executed shell and Python commands in a solid log layout.
 - 🪄 **Magic 'py' Interpreter Mode**: Type `py` on the very first line of your input block to instantly switch the entire execution engine into a pure Python environment for all subsequent lines.
 - 📦 **Runtime Pip Package Manager**: Download, extract, and update pure Python packages (`none-any.whl`) directly from PyPI on the fly.
 - 🔗 **Advanced Argument Parsing**: Execute local scripts seamlessly with standard terminal syntax, including full support for custom inline CLI arguments and quote strings.
